@@ -223,3 +223,31 @@ test('scaffold writes the three captured vault files on first run', () => {
   assert.equal(corePlugins['file-explorer'], true);
   assert.deepEqual(corePlugins, VAULT_FILES['core-plugins.json']);
 });
+
+test('cli: unknown subcommand exits 1 with a JSON error line', () => {
+  const result = spawnSync('node', [SCRIPT_PATH, 'bogus'], { encoding: 'utf8' });
+  assert.equal(result.status, 1);
+  const parsed = JSON.parse(result.stdout);
+  assert.match(parsed.error, /bogus/);
+});
+
+test('cli: detect prints one parseable JSON line', () => {
+  const result = spawnSync('node', [SCRIPT_PATH, 'detect'], { encoding: 'utf8' });
+  assert.equal(result.status, 0);
+  const parsed = JSON.parse(result.stdout);
+  assert.ok(['windows', 'macos', 'linux', null].includes(parsed.platform));
+  assert.equal(typeof parsed.alreadyInstalled, 'boolean');
+});
+
+test('cli: scaffold outside a cadence project refuses politely', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-test-'));
+  try {
+    const result = spawnSync('node', [SCRIPT_PATH, 'scaffold'], { encoding: 'utf8', cwd: tmp });
+    assert.equal(result.status, 0);
+    assert.deepEqual(JSON.parse(result.stdout), { scaffolded: false, reason: 'no-cadence-dir' });
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});

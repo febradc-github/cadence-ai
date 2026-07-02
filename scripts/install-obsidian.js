@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+const fs = require('node:fs');
 const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 
 function platformName(platform) {
   if (platform === 'win32') return 'windows';
@@ -158,5 +160,39 @@ function scaffold(deps) {
   }
   return { scaffolded: true, reason: 'created' };
 }
+
+function defaultDeps() {
+  return {
+    platform: process.platform,
+    env: process.env,
+    cwd: process.cwd(),
+    exists: (p) => fs.existsSync(p),
+    run: (cmd, args) => {
+      const r = spawnSync(cmd, args, { encoding: 'utf8' });
+      return {
+        status: r.status === null ? 1 : r.status,
+        stdout: r.stdout || '',
+        stderr: r.stderr || (r.error ? String(r.error) : ''),
+      };
+    },
+    mkdir: (p) => fs.mkdirSync(p, { recursive: true }),
+    writeFile: (p, content) => fs.writeFileSync(p, content),
+  };
+}
+
+function main() {
+  const subcommand = process.argv[2];
+  const handlers = { detect, install, scaffold };
+  const handler = handlers[subcommand];
+  if (!handler) {
+    process.stdout.write(
+      JSON.stringify({ error: `unknown subcommand: ${subcommand || '(none)'} — expected detect | install | scaffold` }) + '\n'
+    );
+    process.exit(1);
+  }
+  process.stdout.write(JSON.stringify(handler(defaultDeps())) + '\n');
+}
+
+if (require.main === module) main();
 
 module.exports = { platformName, detectInstall, detect, install, scaffold, VAULT_FILES };
