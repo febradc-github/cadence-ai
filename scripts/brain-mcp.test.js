@@ -18,6 +18,7 @@ const {
   getRelated,
   listOrphans,
   listUnresolvedLinks,
+  listTags,
 } = require('./brain-mcp.js');
 
 function makeFixture() {
@@ -176,7 +177,7 @@ test('mcp server: initialize, tools/list, tools/call over stdio', async () => {
 
   assert.equal(responses[1].id, 2);
   const toolNames = responses[1].result.tools.map((t) => t.name).sort();
-  assert.deepEqual(toolNames, ['get_related', 'list_backlinks', 'list_orphans', 'list_unresolved_links', 'read_note', 'search_notes', 'write_note']);
+  assert.deepEqual(toolNames, ['get_related', 'list_backlinks', 'list_orphans', 'list_tags', 'list_unresolved_links', 'read_note', 'search_notes', 'write_note']);
   assert.ok(responses[1].result.tools.every((t) => t.description && t.inputSchema));
 
   assert.equal(responses[2].id, 3);
@@ -195,4 +196,19 @@ test('mcp server: unknown tool is a tool error, unknown method a -32601', async 
   child.kill();
   assert.equal(responses[0].result.isError, true);
   assert.equal(responses[1].error.code, -32601);
+});
+
+test('listTags aggregates frontmatter tags sorted by count', () => {
+  const { brain } = makeFixture();
+  assert.deepEqual(listTags(brain, {}).tags, [
+    { tag: 'api', count: 2, notes: ['api-auth', 'jwt-tokens'] },
+    { tag: 'auth', count: 1, notes: ['api-auth'] },
+    { tag: 'estimation', count: 1, notes: ['loose-note'] },
+  ]);
+});
+
+test('listTags on a missing brain returns empty with a note', () => {
+  const result = listTags(path.join(os.tmpdir(), 'nope-' + Date.now()), {});
+  assert.deepEqual(result.tags, []);
+  assert.match(result.note, /no cadence\/brain/);
 });

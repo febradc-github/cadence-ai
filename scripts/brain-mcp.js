@@ -173,6 +173,23 @@ function listUnresolvedLinks(dir) {
   return { unresolved: [...byTarget.values()] };
 }
 
+function listTags(dir) {
+  const notes = loadBrain(dir);
+  if (notes === null) return { tags: [], note: 'no cadence/brain directory in this project' };
+  const byTag = new Map();
+  for (const note of notes) {
+    for (const tag of note.tags) {
+      const key = tag.toLowerCase();
+      if (!byTag.has(key)) byTag.set(key, { tag, count: 0, notes: [] });
+      const entry = byTag.get(key);
+      entry.count += 1;
+      entry.notes.push(note.name);
+    }
+  }
+  const tags = [...byTag.values()].sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+  return { tags };
+}
+
 const TOOLS = [
   {
     name: 'search_notes',
@@ -224,6 +241,13 @@ const TOOLS = [
     description: 'List every [[link target]] that has no note file, with the notes referencing it — candidates for new notes.',
     inputSchema: { type: 'object', properties: {} },
     handler: listUnresolvedLinks,
+  },
+  {
+    name: 'list_tags',
+    description:
+      'Aggregate all frontmatter tags across the brain with note counts, sorted by frequency. Use before tagging a new note (reuse or nest under an existing tag instead of inventing a synonym) and to decide when a topic has enough notes (5+) to deserve a MOC.',
+    inputSchema: { type: 'object', properties: {} },
+    handler: listTags,
   },
 ];
 
@@ -286,6 +310,7 @@ module.exports = {
   getRelated,
   listOrphans,
   listUnresolvedLinks,
+  listTags,
   handleMessage,
   TOOLS,
 };
