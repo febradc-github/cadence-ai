@@ -8,6 +8,7 @@ const {
   platformName,
   detectInstall,
   detect,
+  install,
 } = require('./install-obsidian.js');
 
 function makeDeps(overrides = {}) {
@@ -146,4 +147,40 @@ test('detect on an unsupported platform reports platform null', () => {
     packageManager: null,
     installCommand: null,
   });
+});
+
+test('install runs the resolved package-manager command and reports success', () => {
+  const { deps, calls } = makeDeps({
+    platform: 'win32',
+    commands: {
+      'winget --version': { status: 0, stdout: 'v1.8', stderr: '' },
+      'winget install Obsidian.Obsidian': { status: 0, stdout: 'Successfully installed', stderr: '' },
+    },
+  });
+  const result = install(deps);
+  assert.equal(result.success, true);
+  assert.match(result.message, /Successfully installed/);
+  assert.ok(calls.run.includes('winget install Obsidian.Obsidian'));
+});
+
+test('install surfaces a failing command verbatim', () => {
+  const { deps } = makeDeps({
+    platform: 'win32',
+    commands: {
+      'winget --version': { status: 0, stdout: 'v1.8', stderr: '' },
+      'winget install Obsidian.Obsidian': { status: 5, stdout: '', stderr: 'requires elevation' },
+    },
+  });
+  const result = install(deps);
+  assert.equal(result.success, false);
+  assert.match(result.message, /status 5/);
+  assert.match(result.message, /requires elevation/);
+});
+
+test('install refuses when no package manager is available', () => {
+  const { deps, calls } = makeDeps({ platform: 'win32' });
+  const result = install(deps);
+  assert.equal(result.success, false);
+  assert.match(result.message, /obsidian\.md\/download/);
+  assert.ok(!calls.run.includes('winget install Obsidian.Obsidian'));
 });

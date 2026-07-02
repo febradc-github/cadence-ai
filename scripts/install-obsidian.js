@@ -84,4 +84,23 @@ function detect(deps) {
   };
 }
 
-module.exports = { platformName, detectInstall, detect };
+function install(deps) {
+  const pm = resolvePackageManager(deps);
+  if (!pm) {
+    return {
+      success: false,
+      message: 'No supported package manager found; install manually from https://obsidian.md/download',
+    };
+  }
+  const result = deps.run(pm.install[0], pm.install[1]);
+  const output = [result.stdout, result.stderr].filter(Boolean).join('\n').trim();
+  if (result.status === 0) {
+    return { success: true, message: output || 'Installed.' };
+  }
+  return {
+    success: false,
+    message: `\`${commandString(pm.install)}\` exited with status ${result.status}:\n${output}`,
+  };
+}
+
+module.exports = { platformName, detectInstall, detect, install };
