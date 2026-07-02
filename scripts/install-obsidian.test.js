@@ -7,6 +7,7 @@ const SCRIPT_PATH = path.join(__dirname, 'install-obsidian.js');
 const {
   platformName,
   detectInstall,
+  detect,
 } = require('./install-obsidian.js');
 
 function makeDeps(overrides = {}) {
@@ -80,4 +81,69 @@ test('linux: flatpak app list containing md.obsidian.Obsidian means installed', 
 test('linux: not installed when snap and flatpak both come up empty', () => {
   const { deps } = makeDeps({ platform: 'linux' });
   assert.deepEqual(detectInstall(deps), { alreadyInstalled: false, installPath: null });
+});
+
+test('detect on windows without obsidian offers winget when available', () => {
+  const { deps } = makeDeps({
+    platform: 'win32',
+    commands: { 'winget --version': { status: 0, stdout: 'v1.8', stderr: '' } },
+  });
+  assert.deepEqual(detect(deps), {
+    platform: 'windows',
+    alreadyInstalled: false,
+    installPath: null,
+    packageManager: 'winget',
+    installCommand: 'winget install Obsidian.Obsidian',
+  });
+});
+
+test('detect reports packageManager null when nothing is available', () => {
+  const { deps } = makeDeps({ platform: 'win32' });
+  const result = detect(deps);
+  assert.equal(result.packageManager, null);
+  assert.equal(result.installCommand, null);
+});
+
+test('detect on macos offers brew cask', () => {
+  const { deps } = makeDeps({
+    platform: 'darwin',
+    commands: { 'brew --version': { status: 0, stdout: '4.3', stderr: '' } },
+  });
+  const result = detect(deps);
+  assert.equal(result.packageManager, 'brew');
+  assert.equal(result.installCommand, 'brew install --cask obsidian');
+});
+
+test('detect on linux prefers snap over flatpak', () => {
+  const { deps } = makeDeps({
+    platform: 'linux',
+    commands: {
+      'snap version': { status: 0, stdout: 'snap 2.63', stderr: '' },
+      'flatpak --version': { status: 0, stdout: 'Flatpak 1.15', stderr: '' },
+    },
+  });
+  const result = detect(deps);
+  assert.equal(result.packageManager, 'snap');
+  assert.equal(result.installCommand, 'snap install obsidian --classic');
+});
+
+test('detect on linux falls back to flatpak when snap is missing', () => {
+  const { deps } = makeDeps({
+    platform: 'linux',
+    commands: { 'flatpak --version': { status: 0, stdout: 'Flatpak 1.15', stderr: '' } },
+  });
+  const result = detect(deps);
+  assert.equal(result.packageManager, 'flatpak');
+  assert.equal(result.installCommand, 'flatpak install -y flathub md.obsidian.Obsidian');
+});
+
+test('detect on an unsupported platform reports platform null', () => {
+  const { deps } = makeDeps({ platform: 'freebsd' });
+  assert.deepEqual(detect(deps), {
+    platform: null,
+    alreadyInstalled: false,
+    installPath: null,
+    packageManager: null,
+    installCommand: null,
+  });
 });

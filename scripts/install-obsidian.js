@@ -43,4 +43,45 @@ function detectInstall(deps) {
   return { alreadyInstalled: false, installPath: null };
 }
 
-module.exports = { platformName, detectInstall };
+const PACKAGE_MANAGERS = {
+  windows: [
+    { name: 'winget', check: ['winget', ['--version']], install: ['winget', ['install', 'Obsidian.Obsidian']] },
+  ],
+  macos: [
+    { name: 'brew', check: ['brew', ['--version']], install: ['brew', ['install', '--cask', 'obsidian']] },
+  ],
+  linux: [
+    { name: 'snap', check: ['snap', ['version']], install: ['snap', ['install', 'obsidian', '--classic']] },
+    { name: 'flatpak', check: ['flatpak', ['--version']], install: ['flatpak', ['install', '-y', 'flathub', 'md.obsidian.Obsidian']] },
+  ],
+};
+
+function resolvePackageManager(deps) {
+  const candidates = PACKAGE_MANAGERS[platformName(deps.platform)] || [];
+  for (const pm of candidates) {
+    if (deps.run(pm.check[0], pm.check[1]).status === 0) return pm;
+  }
+  return null;
+}
+
+function commandString([cmd, args]) {
+  return [cmd, ...args].join(' ');
+}
+
+function detect(deps) {
+  const platform = platformName(deps.platform);
+  if (platform === null) {
+    return { platform: null, alreadyInstalled: false, installPath: null, packageManager: null, installCommand: null };
+  }
+  const { alreadyInstalled, installPath } = detectInstall(deps);
+  const pm = resolvePackageManager(deps);
+  return {
+    platform,
+    alreadyInstalled,
+    installPath,
+    packageManager: pm ? pm.name : null,
+    installCommand: pm ? commandString(pm.install) : null,
+  };
+}
+
+module.exports = { platformName, detectInstall, detect };
