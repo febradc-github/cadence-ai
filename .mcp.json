@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "cadence-brain": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/brain-mcp.js"]
+    }
+  }
+}
