@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 <important>
 - Never commit, never change a ticket's `status`, and never edit `cadence/backlog.yml` or any sprint file from this skill. It only reports findings.
-- This is not the ticket done-ness gate. If the user is asking whether a ticket is actually done and ready to ship, point them at `/cadence:review <id>` instead.
+- This is not the ticket done-ness gate. If the user is asking whether a ticket is actually done and ready to ship, point them at `/cadence:review <id>` instead. Unrelated to the `cadence-reviewer` agent, which `/cadence:review` dispatches internally to verify ticket done-ness -- that agent is never invoked directly, and this skill never invokes it either.
 - Search cadence/brain/ for related domain notes before reviewing -- prior gotchas in this area change what to look for.
 </important>
 
