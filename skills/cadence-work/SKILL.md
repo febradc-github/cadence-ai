@@ -27,9 +27,9 @@ Implements one ticket end to end for a single work session, logging what happene
 4. If any *other* item in the active sprint already has `status: in_progress`, refuse: tell the user to finish that item first (move it to `review` or `done` via `/cadence:review`) before starting this one. Only one item may be `in_progress` at a time.
 5. Search `cadence/brain/*.md` for notes related to this ticket's topic (by filename, tags, and heading text). Surface anything relevant, including conflicts, before writing code -- this is the "hasn't this already been built" check.
 6. Read `cadence/specs/<id>.md` for the acceptance criteria driving this ticket.
-7. If any acceptance criterion is UI-facing, defer to the `frontend-design` skill for that portion of the work.
-8. Implement using TDD: write a failing test for one acceptance criterion, run it to confirm it fails, write the minimal code to pass it, run it to confirm it passes. Repeat per criterion.
-9. Set the item's `status` to `in_progress` if it was `todo`.
+7. Set the item's `status` to `in_progress` if it was `todo` -- before writing any code, so an interrupted session still leaves the board accurate.
+8. If any acceptance criterion is UI-facing, defer to the `frontend-design` skill for that portion of the work.
+9. Implement using TDD: write a failing test for one acceptance criterion, run it to confirm it fails, write the minimal code to pass it, run it to confirm it passes. Repeat per criterion.
 10. Append a short entry to the item's `notes`: `work pass <n>: <one-line summary of what was implemented>`, where `<n>` is the count of prior "work pass" entries plus one.
 11. If you noticed something worth remembering while implementing (an architectural decision, a gotcha, a piece of prior work this ticket built on), dispatch the `brain-curator` agent with a short description of it.
 12. Tell the user what was implemented and that `/cadence:review <id>` is the next step.

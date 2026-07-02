@@ -7,7 +7,7 @@ const os = require('node:os');
 
 const REMIND_PATH = path.join(__dirname, 'remind.js');
 const EXPECTED_MESSAGE =
-  "This project uses the cadence workflow. Never skip a gate. Unless a gated cadence skill's dialogue is already in progress (you just asked the user a direct follow-up question as part of refine/spec/sprint-plan/work/review), invoke the cadence-conversate skill now to classify this message's intent and route it appropriately.\n";
+  "This project uses the cadence workflow; never skip a gate. Only /cadence:review marks an item done; search cadence/brain/ before starting new work. Unless you just asked the user a follow-up question inside a gated cadence skill (refine/spec/sprint-plan/work/review), invoke the cadence-conversate skill to classify and route this message.\n";
 
 test('remind.js prints nothing when no cadence/ directory exists', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));

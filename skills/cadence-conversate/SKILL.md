@@ -29,14 +29,14 @@ Lets the user talk about cadence work casually instead of memorizing command nam
      - `status: ready` and not in any sprint file -> invoke `cadence-sprint-plan`.
      - In the active sprint with `status: in_progress` and the user says the work is finished -> invoke `cadence-review` with that id. Check this condition before the next one.
      - In the active sprint with `status: todo` or `status: in_progress` (and the user isn't saying it's finished) -> invoke `cadence-work` with that id.
-     - In the active sprint with `status: review` -> tell them a review is already in progress for that item; ask if they want to check on it. Do not invoke a skill.
+     - In the active sprint with `status: review` -> a review was started for it; if the user wants a verdict, invoke `cadence-review` with that id (it resumes an interrupted review). Otherwise just report the status.
      - In the active sprint with `status: done` -> tell them it's already shipped. Do not invoke a skill.
    - **Talking about starting a new sprint:** invoke `cadence-sprint-plan`.
    - **Anything ambiguous:** ask one clarifying question rather than guessing which skill to invoke.
 
 ## Inputs
 
-`cadence/backlog.yml`, every `cadence/sprint-*.yml`, `cadence/designs/*.md` (existence checks only).
+`cadence/backlog.yml`, every `cadence/sprint-*.yml`.
 
 ## Outputs
 

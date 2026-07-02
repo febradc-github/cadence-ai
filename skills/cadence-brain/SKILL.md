@@ -42,19 +42,9 @@ Defines the one note format used across cadence/brain/, and the commit message c
 
 Format: `<verb>: <ticket title> (<id>)`, e.g. `feat: add password reset endpoint (C-12)`.
 
-Never include a `Co-Authored-By: Claude` or any Anthropic attribution line. Never use `--no-verify`.
+Never include a `Co-Authored-By: Claude` or any Anthropic attribution line. Never use `--no-verify`. The plugin's PreToolUse guard hook blocks commits that violate either rule -- if a commit is rejected, fix the message or the failing check, never work around the hook.
 
-## Process
-
-This skill has no steps of its own -- it is reference material other cadence skills rely on.
-
-## Inputs
-
-cadence/brain/*.md, read by any skill before starting new work.
-
-## Outputs
-
-None directly -- the brain-curator agent is the only writer.
+This skill is reference material only; the brain-curator agent is the sole writer of cadence/brain/ files.
 
 ## Error handling
 

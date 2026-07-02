@@ -1,0 +1,35 @@
+# Changelog
+
+## 0.2.0 — 2026-07-02
+
+- Added `hooks/guard.js` (PreToolUse on Bash and PowerShell): mechanically
+  blocks git commits that use `--no-verify` or carry an Anthropic/Claude
+  attribution line. These rules were previously prose-only in
+  `cadence-brain`/`cadence-core`.
+- Added `hooks/validate-board.js` (PostToolUse): validates `cadence/backlog.yml`
+  and `cadence/sprint-*.yml` after every write — status values, `C-<n>` id
+  format, duplicate ids, one `in_progress` item, one active sprint, and the
+  one-live-copy-per-item rule. Feeds violations straight back to Claude.
+- Quoted `${CLAUDE_PLUGIN_ROOT}` in `hooks.json` (paths with spaces) and set
+  a 10s timeout on every hook.
+- Trimmed the every-turn reminder text for token economy.
+- `cadence-work` now flips a ticket to `in_progress` before implementation
+  starts, so an interrupted session leaves the board accurate.
+- `cadence-review` documents the not-a-git-repo / no-commits edge case.
+- `cadence-review` now resumes an item stuck at `status: review` (interrupted
+  review session) instead of refusing it, and `cadence-conversate` routes such
+  items back to review -- previously the only recovery was hand-editing YAML.
+- `brain-curator` is explicitly scoped to writing inside `cadence/brain/`.
+- Trimmed boilerplate sections from the `cadence-core` and `cadence-brain`
+  background skills; the every-turn reminder now carries the two most critical
+  core rules (review-only done, brain-first) instead of relying solely on
+  description-based auto-loading.
+- Simplified `brain-curator`'s backlinking step into two explicit passes for
+  reliable execution on haiku.
+- Test coverage for all three hook scripts (`node --test hooks/*.test.js`).
+
+## 0.1.0 — 2026-07-02
+
+- Initial release: conversate, brainstorm, refine, spec, sprint-plan, work,
+  review, standup, board, systematic-debugger, code-reviewer; cadence-reviewer
+  and brain-curator agents; every-turn workflow reminder hook.

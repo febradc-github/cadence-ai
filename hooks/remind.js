@@ -8,5 +8,5 @@ if (!fs.existsSync(cadenceDir)) {
 }
 
 process.stdout.write(
-  "This project uses the cadence workflow. Never skip a gate. Unless a gated cadence skill's dialogue is already in progress (you just asked the user a direct follow-up question as part of refine/spec/sprint-plan/work/review), invoke the cadence-conversate skill now to classify this message's intent and route it appropriately.\n"
+  "This project uses the cadence workflow; never skip a gate. Only /cadence:review marks an item done; search cadence/brain/ before starting new work. Unless you just asked the user a follow-up question inside a gated cadence skill (refine/spec/sprint-plan/work/review), invoke the cadence-conversate skill to classify and route this message.\n"
 );

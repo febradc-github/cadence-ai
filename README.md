@@ -5,6 +5,11 @@ on a YAML board, enforces hard approval gates so nothing skips ahead of its
 own readiness, and maintains a persistent, Obsidian-linked knowledge brain
 that survives across sessions.
 
+## Requirements
+
+Node.js (any current LTS) must be on `PATH` — the plugin's hooks are small
+dependency-free Node scripts.
+
 ## Install (local development)
 
     claude --plugin-dir ./cadence-plugin
@@ -56,6 +61,24 @@ Cadence reads and writes a `cadence/` folder in your project repo:
       brain/*.md
 
 Open `cadence/` in Obsidian to browse the brain notes as a linked graph.
+
+Board files may be hand-edited; the validation hook (below) checks every
+write, and the skills surface parse errors instead of auto-repairing.
+
+## Hooks
+
+Three hooks enforce the workflow mechanically (all no-ops outside a project
+with a `cadence/` directory, except the commit guard, which is safe anywhere):
+
+| Hook | Event | Enforces |
+|---|---|---|
+| `remind.js` | UserPromptSubmit | Re-injects the gate rules and conversate routing each turn. |
+| `guard.js` | PreToolUse (Bash) | Blocks `git commit --no-verify` and Anthropic/Claude attribution lines. |
+| `validate-board.js` | PostToolUse (Write/Edit) | Board invariants: valid statuses, `C-<n>` ids, no duplicate ids, one `in_progress` item, one active sprint, one live copy per item. |
+
+Run the hook tests with:
+
+    node --test hooks/remind.test.js hooks/guard.test.js hooks/validate-board.test.js
 
 ## Design
 

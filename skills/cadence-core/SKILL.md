@@ -29,18 +29,4 @@ This is the shared rulebook every other cadence skill assumes. It has no command
 3. **Anti-hallucination.** Verify any technical or factual claim not directly checkable in the current codebase (web search, cite the source) before asserting it. Below roughly 98% confidence, say so plainly instead of asserting.
 4. **No AI sloppiness.** Every markdown file cadence produces or edits -- skills, design docs, spec docs, brain notes -- uses short declarative sentences, active voice, no filler, no hedge-padding, no restating the obvious, no emoji.
 
-## Process
-
-This skill has no steps of its own -- it is reference material other cadence skills rely on.
-
-## Inputs
-
-None.
-
-## Outputs
-
-None.
-
-## Error handling
-
-Not applicable -- see the skill that is actually running for its error handling.
+This skill is reference material only -- it has no process, inputs, or outputs of its own. See the skill that is actually running for its steps and error handling.
