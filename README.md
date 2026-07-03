@@ -76,6 +76,7 @@ Cadence reads and writes a `cadence/` folder in your project repo:
       designs/<id>.md
       specs/<id>.md
       brain/*.md
+      .brain-state.json   # hand-edit tracking baseline (created on first sync)
 
 Run `/cadence:install-obsidian` once to install Obsidian (if needed) and
 configure `cadence/` as a vault, then open that folder in Obsidian to browse
@@ -106,10 +107,15 @@ Run the hook tests with:
 The plugin ships a dependency-free MCP server (`scripts/brain-mcp.js`) exposing
 the brain as structured tools: `search_notes`, `read_note`, `write_note`,
 `list_backlinks`, `get_related`, `list_orphans`, `list_unresolved_links`,
-`list_tags`.
+`list_tags`, `list_changed_notes`.
 It reads `<project>/cadence/brain/` per call, so results always reflect the
 files on disk. Registered via `.mcp.json`; agents without a `tools:`
 restriction (like `brain-curator`) can use these automatically.
+
+The brain is two-way aware: `list_changed_notes` diffs the brain against the
+baseline in `cadence/.brain-state.json`, so notes hand-edited in Obsidian are
+detected, flagged by the every-turn reminder, and reconciled by the
+brain-curator (hand-edits are ground truth, never clobbered).
 
 Run its tests with:
 

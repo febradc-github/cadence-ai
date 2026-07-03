@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.8.0 — 2026-07-03
+
+- Two-way brain awareness (fourth and final Obsidian sub-project): notes
+  hand-edited directly in Obsidian are now detected instead of silently
+  absorbed or overwritten. A baseline of note mtimes lives in
+  `cadence/.brain-state.json`; the new `list_changed_notes` MCP tool diffs
+  against it (added / modified / deleted) and `acknowledge: true` marks
+  everything seen (the first acknowledge creates the baseline, so tracking
+  is opt-in and older brains behave as before). `write_note` keeps the
+  baseline in sync with its own writes, so only genuine outside edits show
+  up.
+- The every-turn reminder now appends a hand-edit alert (count + up to five
+  note names) whenever tracked brain notes changed outside cadence, routing
+  reconciliation to the brain-curator.
+- brain-curator now starts by checking for hand-edits (hand-edited content
+  is ground truth — folded around, never reverted) and finishes by
+  acknowledging the sync.
+
 ## 0.7.0 — 2026-07-03
 
 - Richer brain note structure (third of the four Obsidian sub-projects):
