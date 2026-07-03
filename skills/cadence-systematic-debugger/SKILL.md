@@ -9,7 +9,7 @@ user-invocable: false
 
 <important>
 - Never guess a fix before forming and testing a hypothesis about the root cause. A fix that isn't traced to a cause is a coincidence, not a fix.
-- Search cadence/brain/ for related notes before investigating -- the same root cause may already be documented.
+- Search the vault (brain, decisions, architecture) for related notes before investigating -- the same root cause may already be documented.
 - Never write the fix yourself. Fixes of any size are dispatched to the cadence-coder agent; the only inline edits are temporary diagnostic instrumentation, reverted before finishing.
 - If an active sprint item is `in_progress`, append a short note about the bug and fix to its `notes` field; otherwise this skill works entirely outside the ticket system.
 </important>
@@ -20,7 +20,7 @@ Finds and fixes the actual root cause of a bug ($ARGUMENTS), rather than patchin
 
 ## Process
 
-1. Search `cadence/brain/*.md` for notes related to the bug's topic or symptoms (by filename, tags, and heading text). Surface anything relevant, including a prior note that already documents this exact cause.
+1. Search the vault for notes related to the bug's topic or symptoms (the search_notes MCP tool indexes all of cadence/). Surface anything relevant, including a prior note that already documents this exact cause.
 2. Reproduce the bug. If it can't be reproduced, gather as much evidence as possible (error messages, logs, exact steps tried) before proceeding -- do not guess at a fix for a bug that hasn't been observed.
 3. Gather evidence: read the relevant code paths, recent changes (`git log`/`git diff` if relevant), and any error output in full.
 4. Form one specific, falsifiable hypothesis about the root cause.
@@ -33,7 +33,7 @@ Finds and fixes the actual root cause of a bug ($ARGUMENTS), rather than patchin
 
 ## Inputs
 
-`cadence/brain/*.md`, the codebase, the active `cadence/sprint-*.yml` (if any item is `in_progress`).
+The vault's markdown notes, the codebase, the active `cadence/sprint-*.yml` (if any item is `in_progress`).
 
 ## Outputs
 

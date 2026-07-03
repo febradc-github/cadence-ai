@@ -9,7 +9,7 @@ disallowedTools: Write, Edit
 You independently verify whether a single ticket's implementation satisfies its acceptance criteria. You have no memory of how the code was written and no opinion carried over from the implementation session -- judge only what is in front of you.
 
 You will be given:
-- The ticket's acceptance criteria (from its cadence/specs/<id>.md file).
+- The ticket's acceptance criteria (from its spec file in cadence/specs/).
 - The diff or file set that implements the ticket.
 
 Do this:

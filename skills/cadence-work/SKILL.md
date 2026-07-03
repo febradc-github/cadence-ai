@@ -10,7 +10,7 @@ user-invocable: false
 <important>
 - Refuse assignee: human items -- tell the user it's tracked as human-owned, don't implement it.
 - Only one item in the active sprint may be in_progress at a time. If a different item is already in_progress, refuse and tell the user to finish it (move it to review or done) before starting another -- this keeps /cadence:review's diff scoped to one ticket.
-- Search cadence/brain/ before writing any code. If something related already exists, surface it -- don't rebuild it blind.
+- Search the vault (brain, decisions, architecture, item notes) before writing any code. If something related already exists, surface it -- don't rebuild it blind.
 - Follow TDD: write the failing test first, then the minimal code to pass it. Defer to superpowers:test-driven-development if installed.
 - Never write or edit source files from this skill. Every code change -- including docstrings, comments, renames, formatting, and "one-line" fixes -- is implemented by dispatching the cadence-coder agent. There is no change small enough to do inline.
 - If implementation needs user decisions (e.g. UI choices), resolve them with the user first, then dispatch cadence-coder with the answers -- ongoing dialogue is a reason to ask questions, never a reason to code inline.
@@ -27,8 +27,8 @@ Implements one ticket end to end for a single work session, logging what happene
 2. If the item's `assignee` is `human`, refuse: tell the user this ticket is tracked as human-owned and point them at it instead of implementing it.
 3. If the item's `status` isn't `todo` or `in_progress` (e.g. it's still `idea`/`ready` and was never planned into this sprint, or it's mid-`review`), refuse and redirect to the correct earlier step.
 4. If any *other* item in the active sprint already has `status: in_progress`, refuse: tell the user to finish that item first (move it to `review` or `done` via `/cadence:review`) before starting this one. Only one item may be `in_progress` at a time.
-5. Search `cadence/brain/*.md` for notes related to this ticket's topic (by filename, tags, and heading text). Surface anything relevant, including conflicts, before writing code -- this is the "hasn't this already been built" check.
-6. Read `cadence/specs/<id>.md` for the acceptance criteria driving this ticket. If the item has a `parent`, also read the parent chain's design docs (`cadence/designs/<parent-id>.md`, and its parent's in turn) -- the umbrella rationale often settles implementation questions the leaf spec doesn't repeat.
+5. Search the vault (brain, decisions, architecture, item notes -- the search_notes MCP tool indexes all of them) for notes related to this ticket's topic. Surface anything relevant, including conflicts, before writing code -- this is the "hasn't this already been built" check. Pay particular attention to `cadence/decisions/adr-*.md` and `cadence/architecture/arch-*.md` notes touching this area: the implementation must not silently contradict a recorded decision.
+6. Read the ticket's spec -- `cadence/specs/<id>-*-spec.md`, falling back to the legacy `cadence/specs/<id>.md` -- for the acceptance criteria driving this ticket. If the item has a `parent`, also read the parent chain's design docs (`cadence/designs/<parent-id>-*-design.md`, legacy `cadence/designs/<parent-id>.md`) -- the umbrella rationale often settles implementation questions the leaf spec doesn't repeat.
 7. Set the item's `status` to `in_progress` if it was `todo` -- before writing any code, so an interrupted session still leaves the board accurate.
 8. If any acceptance criterion is UI-facing, defer to the `frontend-design` skill (if installed) for that portion of the work.
 9. Implement by dispatching the `cadence-coder` agent, passing the spec's acceptance criteria, the relevant brain notes from step 5, pointers to the affected files, and any decisions already gathered from the user (e.g. UI choices from step 8). It implements test-first (failing test per criterion, then minimal code to pass) and reports back files changed, test results, and notes. Dispatch it for every change, no matter how small -- docstring, comment, and polish passes included. If questions surface mid-implementation, resolve them with the user and re-dispatch; never finish the code yourself.
@@ -47,7 +47,7 @@ Implements one ticket end to end for a single work session, logging what happene
 
 ## Inputs
 
-The active `cadence/sprint-*.yml`, `cadence/specs/<id>.md`, `cadence/brain/*.md`.
+The active `cadence/sprint-*.yml`, the ticket's spec, the parent chain's design docs, the vault's markdown notes.
 
 ## Outputs
 

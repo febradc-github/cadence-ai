@@ -9,7 +9,7 @@ user-invocable: false
 
 <important>
 - Always invoke the matched skill directly via the Skill tool rather than merely telling the user which command to run. The invoked skill's own internal approval gates (explicit design-doc approval in refine, explicit spec approval in spec, sprint-goal requirement in sprint-plan, etc.) are the actual safety mechanism -- conversate's job is routing, not gating.
-- Never perform a gated skill's effects yourself inline (e.g. never write cadence/designs/<id>.md directly). Only ever: (a) answer a read-only question directly, or (b) invoke exactly one matching skill.
+- Never perform a gated skill's effects yourself inline (e.g. never write a design doc or item note directly). Only ever: (a) answer a read-only question directly, or (b) invoke exactly one matching skill.
 - If genuinely ambiguous, ask one clarifying question instead of guessing which skill to invoke.
 </important>
 

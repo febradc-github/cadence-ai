@@ -18,12 +18,12 @@ Gives a quick, honest snapshot of where the active sprint stands, without touchi
 
 1. Find the `cadence/sprint-*.yml` with `sprint.status: active`. If none exists, tell the user and suggest `/cadence:sprint-plan`.
 2. List every item in it: id, title, status, and the last `notes` entry (if any).
-3. Search `cadence/brain/*.md` for notes related to items currently `in_progress` or `review`; surface anything relevant, especially anything that looks like a blocker.
+3. Search the vault for notes related to items currently `in_progress` or `review`; surface anything relevant, especially anything that looks like a blocker.
 4. Ask the user what they want to focus on today.
 
 ## Inputs
 
-The active `cadence/sprint-*.yml`, `cadence/brain/*.md`.
+The active `cadence/sprint-*.yml`, the vault's markdown notes.
 
 ## Outputs
 

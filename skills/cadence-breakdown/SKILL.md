@@ -12,7 +12,7 @@ user-invocable: false
 - Only backlog items can be broken down. Refuse items living in a sprint file -- breaking down mid-sprint work invalidates the sprint's scope.
 - Two levels of nesting maximum: epic -> story -> task. Refuse type: task items; tasks are always leaves.
 - Every child gets non-empty acceptance_criteria and a points estimate before the proposal is presented. No placeholder children.
-- Search cadence/brain/ for related notes before proposing the breakdown, and surface what you find.
+- Search the vault (brain, decisions, architecture, item notes) for related notes before proposing the breakdown, and surface what you find.
 </important>
 
 ## Purpose
@@ -27,18 +27,27 @@ enters sprints as reviewable leaf tickets instead of one unshippable blob.
    - Not found anywhere: refuse; suggest `/cadence:refine <idea>` to create it first.
    - `type: task`: refuse; tasks are leaves. If the task is too big, its estimate is wrong -- revisit the parent story's breakdown instead.
 2. Decide the child type: `epic` parent -> `story` children; `story` parent (explicit or absent `type`) -> `task` children.
-3. Search `cadence/brain/*.md` for notes related to the item's topic (by filename, tags, and heading text). Surface anything relevant, including conflicts, before continuing.
-4. Read `cadence/designs/<id>.md` (and the parent epic's design doc too, when breaking a story that has a `parent`). If no design doc exists, refuse and direct the user to `/cadence:refine` -- breakdown decomposes an approved design, it does not invent one.
+3. Search the vault (brain, decisions, architecture, item notes -- the search_notes MCP tool indexes all of them) for notes related to the item's topic. Surface anything relevant, including conflicts, before continuing.
+4. Read the item's design doc -- `cadence/designs/<id>-*-design.md`, falling back to the legacy `cadence/designs/<id>.md` (and the parent epic's design doc too, when breaking a story that has a `parent`). If no design doc exists, refuse and direct the user to `/cadence:refine` -- breakdown decomposes an approved design, it does not invent one.
 5. Draft 2-8 children. For each: a clear title, a one-paragraph description, non-empty `acceptance_criteria` (concrete, checkable), a `points` estimate, and an `assignee` (inherit the parent's unless the user says otherwise). Children must partition the parent's scope: together they cover the parent's acceptance criteria, and no two children overlap. If the parent's scope honestly fits in one child, say so and recommend skipping breakdown.
 6. Present the full proposal (every child, every field) and ask the user to explicitly approve it. Revise and re-present on requested changes. Do not write anything until they approve.
 7. Once approved:
-   - Mint child ids: scan `cadence/backlog.yml` and every `cadence/sprint-*.yml` for existing `C-<N>` ids; children get `C-<max+1>`, `C-<max+2>`, ... For each computed id, check `cadence/designs/<id>.md` does not already exist (an abandoned refine/breakdown draft may hold it); if it does, warn the user and skip forward to the next free id -- never overwrite silently.
-   - Write `cadence/designs/<child-id>.md` for each child:
+   - Mint child ids: scan `cadence/backlog.yml` and every `cadence/sprint-*.yml` for existing `C-<N>` ids; children get `C-<max+1>`, `C-<max+2>`, ... For each computed id, check no `cadence/designs/<id>-*.md` (or legacy `cadence/designs/<id>.md`) already exists (an abandoned refine/breakdown draft may hold it); if one does, warn the user and skip forward to the next free id -- never overwrite silently.
+   - Derive each child's `<slug>` from its title (kebab-case, at most five words). Write `cadence/designs/<child-id>-<slug>-design.md` for each child:
 
-         # <child-id>: <title>
+         ---
+         type: design
+         tags: []
+         created: <today, YYYY-MM-DD>
+         updated: <today, YYYY-MM-DD>
+         related: ["[[<child-id>-<slug>]]", "[[<parent design note>]]"]
+         sources: []
+         ---
+
+         # <child-id>: <title> -- Design
 
          ## Parent
-         Part of <parent-id> -- see cadence/designs/<parent-id>.md for the umbrella rationale.
+         Part of [[<parent item note>]] -- see [[<parent design note>]] for the umbrella rationale.
 
          ## Problem
          <this child's slice of the parent problem>
@@ -55,6 +64,26 @@ enters sprints as reviewable leaf tickets instead of one unshippable blob.
 
          ## Assignee
          <claude|human>
+
+   - Write each child's item note -- `cadence/user-stories/<child-id>-<slug>.md` for stories, `cadence/tasks/<child-id>-<slug>.md` for tasks:
+
+         ---
+         type: <story|task>
+         tags: []
+         aliases: ["<child-id>"]
+         created: <today, YYYY-MM-DD>
+         updated: <today, YYYY-MM-DD>
+         related: ["[[<child-id>-<slug>-design]]", "[[<parent item note>]]"]
+         ---
+
+         # <child-id>: <title>
+
+         <one-paragraph description>
+
+         - Design: [[<child-id>-<slug>-design]]
+         - Parent: [[<parent item note>]]
+
+   - Update the parent's item note: add each child under a `Children:` list as `[[<child-id>-<slug>]]`, add them to `related`, and set `updated` to today. (A legacy parent with no item note yet: create one now in its type's folder, following the format above.)
 
    - Append each child to `cadence/backlog.yml`:
 
@@ -77,11 +106,11 @@ enters sprints as reviewable leaf tickets instead of one unshippable blob.
 
 ## Inputs
 
-`cadence/backlog.yml`, every `cadence/sprint-*.yml` (id computation only), `cadence/designs/<id>.md`, `cadence/brain/*.md`.
+`cadence/backlog.yml`, every `cadence/sprint-*.yml` (id computation only), the parent's design doc, the vault's markdown notes.
 
 ## Outputs
 
-`cadence/designs/<child-id>.md` (one per child), `cadence/backlog.yml` (children appended with `status: idea`; parent's `status`/`updated` adjusted).
+`cadence/designs/<child-id>-<slug>-design.md` and an item note in `cadence/user-stories/` or `cadence/tasks/` (one pair per child), the parent's item note (children linked), `cadence/backlog.yml` (children appended with `status: idea`; parent's `status`/`updated` adjusted).
 
 ## Error handling
 

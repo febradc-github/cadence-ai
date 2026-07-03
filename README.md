@@ -54,7 +54,7 @@ session; nothing else is agent-shaped.
 |---|---|---|
 | `cadence-coder` | inherit | Language-adaptive implementation of one ticket or confirmed bug fix, test-first, matching the repo's existing conventions. Dispatched by `/cadence:work` (self-contained tickets) and `/cadence:systematic-debugger` (non-trivial fixes). Never commits, never touches `cadence/` data files. |
 | `cadence-reviewer` | opus | Independent done-ness verdict for `/cadence:review`; judges only the criteria and the diff, read-only. |
-| `brain-curator` | haiku | Sole writer of `cadence/brain/` notes; dispatched opportunistically when something worth remembering happens. |
+| `brain-curator` | haiku | Sole writer of the knowledge folders (`cadence/brain/`, `cadence/decisions/`, `cadence/architecture/`); dispatched opportunistically when something worth remembering happens. |
 
 ## Workflow
 
@@ -75,21 +75,34 @@ instead of requiring each command to be typed by hand.
 
 ## Data
 
-Cadence reads and writes a `cadence/` folder in your project repo:
+Cadence reads and writes a `cadence/` folder in your project repo. The whole
+folder is an Obsidian vault; every markdown file in it follows one shared
+note format (frontmatter + wikilinks), so items, designs, specs, decisions,
+architecture, and brain notes all interconnect in Graph View:
 
     cadence/
-      backlog.yml
-      sprint-1.yml
-      designs/<id>.md
-      specs/<id>.md
-      brain/*.md
-      .brain-state.json   # hand-edit tracking baseline (created on first sync)
+      backlog.yml, sprint-1.yml         # the board: status, points, planning
+      epics/C-<n>-<slug>.md             # one item note per epic
+      user-stories/C-<n>-<slug>.md      # one item note per user story
+      tasks/C-<n>-<slug>.md             # one item note per task
+      designs/C-<n>-<slug>-design.md    # design doc per item
+      specs/C-<n>-<slug>-spec.md        # spec per leaf item
+      architecture/arch-<topic>.md      # how the system is shaped
+      decisions/adr-<NNN>-<slug>.md     # why it is shaped that way (ADRs)
+      brain/*.md, brain/moc-<topic>.md  # domain/process knowledge, MOCs
+      .brain-state.json                 # hand-edit tracking baseline
+
+Item notes carry their ticket id as an Obsidian alias, so `[[C-12]]` anywhere
+in the vault resolves to the item. Status lives only in the YAML board --
+notes never duplicate it. Boards from before 0.10 keep working: legacy flat
+`designs/<id>.md` / `specs/<id>.md` files are read as fallbacks and migrated
+opportunistically.
 
 Run `/cadence:install-obsidian` once to install Obsidian (if needed) and
 configure `cadence/` as a vault, then open that folder in Obsidian to browse
-the brain notes as a linked graph. Brain notes use hierarchical tags
-(`api/auth`) and hub notes (`moc-<topic>.md`, Maps of Content) so the graph
-stays navigable as it grows; the brain-curator agent maintains both.
+everything as a linked graph. Notes use hierarchical tags (`api/auth`) and
+hub notes (`moc-<topic>.md`, Maps of Content) so the graph stays navigable as
+it grows; the brain-curator agent maintains both.
 
 Board files may be hand-edited; the validation hook (below) checks every
 write, and the skills surface parse errors instead of auto-repairing.
@@ -112,17 +125,23 @@ Run the hook tests with:
 ## Brain MCP server
 
 The plugin ships a dependency-free MCP server (`scripts/brain-mcp.js`) exposing
-the brain as structured tools: `search_notes`, `read_note`, `write_note`,
+the vault as structured tools: `search_notes`, `read_note`, `write_note`,
 `list_backlinks`, `get_related`, `list_orphans`, `list_unresolved_links`,
 `list_tags`, `list_changed_notes`.
-It reads `<project>/cadence/brain/` per call, so results always reflect the
-files on disk. Registered via `.mcp.json`; agents without a `tools:`
-restriction (like `brain-curator`) can use these automatically.
+It indexes every markdown note under `<project>/cadence/` per call (item
+notes, designs, specs, decisions, architecture, brain), resolving ticket-id
+aliases like `[[C-12]]`, so results always reflect the files on disk.
+`write_note` targets the knowledge folders only (`brain/` by default, or
+`folder: decisions` / `folder: architecture`). Registered via `.mcp.json`;
+agents without a `tools:` restriction (like `brain-curator`) can use these
+automatically.
 
-The brain is two-way aware: `list_changed_notes` diffs the brain against the
-baseline in `cadence/.brain-state.json`, so notes hand-edited in Obsidian are
-detected, flagged by the every-turn reminder, and reconciled by the
-brain-curator (hand-edits are ground truth, never clobbered).
+The knowledge folders are two-way aware: `list_changed_notes` diffs `brain/`,
+`decisions/`, and `architecture/` against the baseline in
+`cadence/.brain-state.json`, so notes hand-edited in Obsidian are detected,
+flagged by the every-turn reminder, and reconciled by the brain-curator
+(hand-edits are ground truth, never clobbered). Workflow notes written by the
+gated skills are deliberately untracked.
 
 Run its tests with:
 

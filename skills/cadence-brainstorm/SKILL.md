@@ -10,7 +10,7 @@ user-invocable: false
 <important>
 - Never write to cadence/backlog.yml, cadence/designs/, or any other cadence data file from this skill -- brainstorming has no side effects. Only `cadence-refine` writes the design doc and backlog entry.
 - Do not ask for acceptance criteria, a points estimate, or an assignee -- those belong to `cadence-refine`. Keep questions open-ended and exploratory.
-- Search cadence/brain/ for related notes before starting the dialogue, and surface what you find.
+- Search the vault (brain, decisions, architecture, item notes) for related notes before starting the dialogue, and surface what you find.
 </important>
 
 ## Purpose
@@ -19,18 +19,19 @@ Turns a vague idea ($ARGUMENTS) into a clear enough shape that `/cadence:refine`
 
 ## Process
 
-1. Search `cadence/brain/*.md` for notes related to the idea's topic (by filename, tags, and heading text). Surface anything relevant, including conflicts, before continuing.
+1. Search the vault (brain, decisions, architecture, and existing item notes -- the search_notes MCP tool indexes all of them) for notes related to the idea's topic. Surface anything relevant, including conflicts, before continuing.
 2. Run an open-ended, one-question-at-a-time dialogue with the user to explore:
    - What problem this actually solves and for whom.
    - The rough shape of an approach (not a full design -- just enough to know it's worth formalizing).
+   - How it would sit in the existing system: which components it touches, and whether any `cadence/architecture/` or `cadence/decisions/` note found in step 1 supports or conflicts with it. Surfacing an architectural conflict here is cheaper than discovering it in refine.
    - Any alternatives briefly considered and why this direction seems right.
 3. Keep exploring until the idea is concrete enough that `cadence-refine` could immediately start asking its own (stricter) questions without having to re-derive the basic problem statement.
 4. Summarize the idea in two or three sentences and confirm with the user that it's ready to formalize.
-5. Once confirmed, invoke the `cadence-refine` skill, passing the summary as its starting description.
+5. Once confirmed, invoke the `cadence-refine` skill, passing the summary as its starting description -- including any architecture observations and tentative design directions from step 2, so refine's gap-closing starts from them instead of re-deriving them.
 
 ## Inputs
 
-`cadence/brain/*.md`.
+The vault's markdown notes (`cadence/brain/`, `cadence/decisions/`, `cadence/architecture/`, item notes).
 
 ## Outputs
 

@@ -13,14 +13,13 @@ const MESSAGE =
 let handEditLine = '';
 try {
   const { snapshotBrain, readState, diffBrainState } = require(path.join(__dirname, '..', 'scripts', 'brain-mcp.js'));
-  const brainDir = path.join(cadenceDir, 'brain');
-  const current = snapshotBrain(brainDir);
-  const state = current && readState(brainDir);
+  const current = snapshotBrain(cadenceDir);
+  const state = current && readState(cadenceDir);
   if (current && state) {
     const changed = diffBrainState(current, state.notes);
     if (changed.length > 0) {
       const names = changed.slice(0, 5).map((c) => c.name).join(', ');
-      handEditLine = `${changed.length} brain note(s) changed outside cadence since last sync (hand-edits in Obsidian?): ${names}. Dispatch brain-curator to reconcile (list_changed_notes MCP tool, acknowledge when done).\n`;
+      handEditLine = `${changed.length} knowledge note(s) changed outside cadence since last sync (hand-edits in Obsidian?): ${names}. Dispatch brain-curator to reconcile (list_changed_notes MCP tool, acknowledge when done).\n`;
     }
   }
 } catch {

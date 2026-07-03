@@ -22,7 +22,7 @@ The done-ness gate. An implementer judging their own work is unreliable, so this
 
 1. Look up `<id>` (from `$ARGUMENTS`) in the active sprint file (the `cadence/sprint-*.yml` with `sprint.status: active`). If not found, or its `status` isn't `in_progress` or `review`, refuse and tell the user what to do instead (e.g. run `/cadence:work <id>` first, or `/cadence:sprint-plan` if no active sprint exists). A `status: review` item means a prior review session was interrupted before reaching a verdict -- tell the user that, then resume from step 3.
 2. Set the item's `status` to `review`.
-3. Read `cadence/specs/<id>.md` for its acceptance criteria.
+3. Read the ticket's spec -- `cadence/specs/<id>-*-spec.md`, falling back to the legacy `cadence/specs/<id>.md` -- for its acceptance criteria.
 4. Get the diff of what changed for this ticket (`git diff` / `git status` against the last commit). Since `/cadence:work` enforces only one `in_progress` item at a time, this diff should represent exactly this ticket's changes; if `git status` shows unrelated uncommitted changes anyway, stop and ask the user before proceeding rather than folding them into this ticket's review or commit.
 5. Dispatch the `cadence-reviewer` agent via the Task tool, passing only the acceptance criteria and the diff -- no implementation-session narrative or reasoning.
 6. If the agent's verdict is FAIL:
@@ -38,7 +38,7 @@ The done-ness gate. An implementer judging their own work is unreliable, so this
 
 ## Inputs
 
-The active `cadence/sprint-*.yml`, `cadence/specs/<id>.md`, `git diff`/`git status`.
+The active `cadence/sprint-*.yml`, the ticket's spec, `git diff`/`git status`.
 
 ## Outputs
 

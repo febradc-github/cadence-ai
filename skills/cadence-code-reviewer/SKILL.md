@@ -10,7 +10,7 @@ user-invocable: false
 <important>
 - Never commit, never change a ticket's `status`, and never edit `cadence/backlog.yml` or any sprint file from this skill. It only reports findings.
 - This is not the ticket done-ness gate. If the user is asking whether a ticket is actually done and ready to ship, point them at `/cadence:review <id>` instead. Unrelated to the `cadence-reviewer` agent, which `/cadence:review` dispatches internally to verify ticket done-ness -- that agent is never invoked directly, and this skill never invokes it either.
-- Search cadence/brain/ for related domain notes before reviewing -- prior gotchas in this area change what to look for.
+- Search the vault (brain, decisions, architecture) for related notes before reviewing -- prior gotchas and recorded decisions in this area change what to look for.
 </important>
 
 ## Purpose
@@ -20,7 +20,7 @@ Reviews code or a diff for correctness bugs and reuse/simplification opportuniti
 ## Process
 
 1. Determine the review target: if `$ARGUMENTS` names specific files or a scope, use that; otherwise default to `git diff` / `git status` for the current uncommitted changes.
-2. Search `cadence/brain/*.md` for notes related to the affected area (by filename, tags, and heading text). Surface anything relevant, including known gotchas, before reviewing.
+2. Search the vault for notes related to the affected area (the search_notes MCP tool indexes all of cadence/). Surface anything relevant -- known gotchas, and any `decisions/adr-*.md` the change might contradict -- before reviewing.
 3. Review the target for:
    - Correctness bugs: logic errors, edge cases, incorrect assumptions.
    - Reuse and simplification: duplicated logic, unnecessary complexity, existing utilities that should be used instead.
@@ -29,7 +29,7 @@ Reviews code or a diff for correctness bugs and reuse/simplification opportuniti
 
 ## Inputs
 
-`cadence/brain/*.md`, the codebase, `git diff`/`git status` (default target).
+The vault's markdown notes, the codebase, `git diff`/`git status` (default target).
 
 ## Outputs
 

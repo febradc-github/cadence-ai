@@ -22,16 +22,17 @@ test('remind.js prints the workflow + routing reminder when cadence/ directory e
   assert.equal(output, EXPECTED_MESSAGE);
 });
 
-test('remind.js appends a hand-edit line when tracked brain notes changed', () => {
+test('remind.js appends a hand-edit line when tracked knowledge notes changed', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
-  const brain = path.join(tmpDir, 'cadence', 'brain');
+  const vault = path.join(tmpDir, 'cadence');
+  const brain = path.join(vault, 'brain');
   fs.mkdirSync(brain, { recursive: true });
   fs.writeFileSync(path.join(brain, 'known.md'), '# Known\n');
   const { listChangedNotes } = require('../scripts/brain-mcp.js');
-  listChangedNotes(brain, { acknowledge: true });
+  listChangedNotes(vault, { acknowledge: true });
   fs.writeFileSync(path.join(brain, 'hand-made.md'), '# Hand made\n');
   const output = execFileSync('node', [REMIND_PATH], { encoding: 'utf8', cwd: tmpDir });
   assert.ok(output.startsWith(EXPECTED_MESSAGE));
-  assert.match(output, /1 brain note\(s\) changed outside cadence/);
+  assert.match(output, /1 knowledge note\(s\) changed outside cadence/);
   assert.match(output, /hand-made/);
 });

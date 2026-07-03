@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.10.0 — 2026-07-03
+
+- The whole `cadence/` folder is now one interconnected Obsidian vault. Every
+  markdown artifact follows the shared brain note format (frontmatter with
+  `type`/`tags`/`aliases`/`related`, wikilinks) and lives in a typed folder:
+  `epics/`, `user-stories/`, `tasks/` (item notes, named `C-<n>-<slug>.md`),
+  `designs/` (`C-<n>-<slug>-design.md`), `specs/` (`C-<n>-<slug>-spec.md`),
+  `decisions/` (`adr-<NNN>-<slug>.md`), `architecture/` (`arch-<topic>.md`),
+  plus `brain/` as before. Item notes carry their ticket id as an alias, so
+  `[[C-12]]` resolves in the graph; status stays exclusively in the YAML
+  board so nothing drifts.
+- refine and breakdown now write an item note per epic/story/task alongside
+  the design doc, linking design ↔ item ↔ parent/children; spec links the
+  spec note back to the item. Legacy flat `designs/<id>.md` / `specs/<id>.md`
+  are read as fallbacks and migrated opportunistically.
+- Architecture and design are now first-class in gap-closing: brainstorm
+  explores system fit early, and refine must establish architecture fit
+  (reading `architecture/` and `decisions/`, surfacing ADR conflicts) and
+  close forced design decisions before an item is accepted. Significant
+  choices become ADRs and system shape becomes architecture notes, both via
+  brain-curator — its routing, ADR numbering, and supersede rules are new.
+- The brain MCP server indexes the entire vault per call (with ticket-id
+  alias resolution in search/read/backlinks/unresolved-links) and its
+  `write_note` gains a `folder` argument for `decisions/` and
+  `architecture/`. Hand-edit tracking covers exactly the curator-owned
+  knowledge folders — workflow notes written by gated skills are deliberately
+  untracked — and pre-0.10 `.brain-state.json` baselines migrate in place.
+- All skills search the vault (not just `brain/`) before starting work;
+  `/cadence:work` and `/cadence:code-reviewer` explicitly check recorded
+  decisions so implementations don't silently contradict an ADR.
+
 ## 0.9.0 — 2026-07-03
 
 - Epic -> user story -> task hierarchy. Items gain optional `type`

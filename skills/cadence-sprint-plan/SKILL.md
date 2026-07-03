@@ -22,7 +22,7 @@ Closes out the previous sprint (if any), carries its unfinished work forward, an
    - Set its `sprint.status` to `completed`.
    - Collect every item in it whose `status` is not `done`.
    - If any collected item's `carryovers` is already 2 or more (rolling over a second time or beyond), dispatch the `brain-curator` agent with that observation as a candidate process learning -- a repeatedly-slipping item is worth remembering.
-2. Search `cadence/brain/*.md` for process-type notes relevant to sprint planning (by filename, tags, and heading text) -- especially estimation bias or recurring blockers. Surface anything relevant, including conflicts, before continuing.
+2. Search the vault for process-type notes relevant to sprint planning (the search_notes MCP tool indexes all of cadence/) -- especially estimation bias or recurring blockers. Surface anything relevant, including conflicts, before continuing.
 3. List the `ready` candidates from `cadence/backlog.yml` and recommend a selection. Candidates are leaf items only -- exclude anything with `type: epic` and anything another item names as `parent`. List each candidate with id, title, and points, grouped under its parent epic/story when it has one (show the parent's id and title as the group header) so the user sees what larger goal each piece serves. Then mark which items you recommend pulling in, with a one-line reason per item, ranked by:
    - **Capacity first.** Budget = points completed (`status: done`) in the previous sprint, minus the points of carried-over items (they consume capacity too). With no prior sprint there is no velocity data -- say so and recommend a deliberately small starting set.
    - **Finish what's started.** Children of an epic that already has done or carried-over children come first; closing out an epic beats opening a new one.
@@ -66,7 +66,7 @@ Closes out the previous sprint (if any), carries its unfinished work forward, an
 
 ## Inputs
 
-`cadence/backlog.yml`, every `cadence/sprint-*.yml`, `cadence/brain/*.md`.
+`cadence/backlog.yml`, every `cadence/sprint-*.yml`, the vault's markdown notes.
 
 ## Outputs
 

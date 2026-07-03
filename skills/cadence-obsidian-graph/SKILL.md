@@ -8,7 +8,7 @@ user-invocable: false
 
 ## Purpose
 
-Opens the brain vault in Obsidian so the user can browse `cadence/brain/` as a linked graph. Obsidian's URI scheme has no direct "open graph view" action, so this opens the vault and tells the user the graph hotkey.
+Opens the vault in Obsidian so the user can browse all of `cadence/` -- item notes, designs, specs, decisions, architecture, and brain notes -- as a linked graph. Obsidian's URI scheme has no direct "open graph view" action, so this opens the vault and tells the user the graph hotkey.
 
 ## Process
 

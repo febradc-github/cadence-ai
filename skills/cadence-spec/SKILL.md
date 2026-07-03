@@ -8,23 +8,32 @@ user-invocable: false
 # Spec
 
 <important>
-- Refuse to run if cadence/backlog.yml has no item with this id and status: idea, or if cadence/designs/<id>.md does not exist. Tell the user to run /cadence:refine first.
+- Refuse to run if cadence/backlog.yml has no item with this id and status: idea, or if no design doc exists for it (cadence/designs/<id>-*-design.md, or the legacy cadence/designs/<id>.md). Tell the user to run /cadence:refine first.
 - Refuse epics and containers (items with type: epic, or items another item names as parent). Only leaf stories and tasks get spec'd; direct the user to /cadence:breakdown and to spec the children instead.
 - Do not flip the item's status to ready until the user has explicitly approved the spec file.
-- Design and spec are always separate files. Never skip writing cadence/specs/<id>.md and just reuse the design doc.
+- Design and spec are always separate files. Never skip writing the spec file and just reuse the design doc.
 </important>
 
 ## Purpose
 
-Converts the rationale in `cadence/designs/<id>.md` into a checklist of concrete acceptance criteria that `/cadence:review` can later verify mechanically, and gates the item's move to `ready`.
+Converts the rationale in the item's design doc into a checklist of concrete acceptance criteria that `/cadence:review` can later verify mechanically, and gates the item's move to `ready`.
 
 ## Process
 
 1. Look up `<id>` (from `$ARGUMENTS`) in `cadence/backlog.yml`. If no item exists with that id and `status: idea`, refuse and tell the user to run `/cadence:refine <idea>` first. If the item has `type: epic`, or any other backlog item names it as `parent`, refuse: containers are never spec'd -- point the user at `/cadence:breakdown <id>` (if it has no children yet) or at spec'ing its children.
-2. Read `cadence/designs/<id>.md`. If it doesn't exist, refuse with the same message.
-3. Search `cadence/brain/*.md` for notes related to `<id>`'s topic (by filename, tags, and heading text). Surface anything relevant, including conflicts, before continuing.
-4. If `cadence/specs/<id>.md` already exists (the item's `status` is still `idea`, so this is not an approved spec -- it can only be a draft left over from an abandoned prior `/cadence:spec` session), warn the user it looks like a leftover draft and ask whether to overwrite it or keep it as-is before continuing. Do not silently overwrite it.
-5. Write `cadence/specs/<id>.md`, turning the design's "Acceptance criteria" section into a checklist, and carrying forward anything explicitly out of scope from the dialogue:
+2. Read the item's design doc: `cadence/designs/<id>-*-design.md`, falling back to the legacy `cadence/designs/<id>.md`. If neither exists, refuse with the same message.
+3. Search the vault (brain, decisions, architecture, item notes -- the search_notes MCP tool indexes all of them) for notes related to `<id>`'s topic. Surface anything relevant, including conflicts, before continuing.
+4. If a spec file for `<id>` already exists (the item's `status` is still `idea`, so this is not an approved spec -- it can only be a draft left over from an abandoned prior `/cadence:spec` session), warn the user it looks like a leftover draft and ask whether to overwrite it or keep it as-is before continuing. Do not silently overwrite it.
+5. Write `cadence/specs/<id>-<slug>-spec.md` (same `<slug>` as the design doc), turning the design's "Acceptance criteria" section into a checklist, and carrying forward anything explicitly out of scope from the dialogue:
+
+       ---
+       type: spec
+       tags: []
+       created: <today, YYYY-MM-DD>
+       updated: <today, YYYY-MM-DD>
+       related: ["[[<id>-<slug>]]", "[[<id>-<slug>-design]]"]
+       sources: []
+       ---
 
        # <id>: <title> -- Spec
 
@@ -36,22 +45,24 @@ Converts the rationale in `cadence/designs/<id>.md` into a checklist of concrete
        <explicitly excluded items discussed during refine, or "None.">
 
        ## Reference
-       See cadence/designs/<id>.md for rationale and trade-offs.
+       See [[<id>-<slug>-design]] for rationale and trade-offs.
 
 6. Present the spec file content to the user and ask them to explicitly approve it. If they request changes, revise and re-present. Do not proceed until approved.
 7. Once approved, update the item in `cadence/backlog.yml`:
    - `status: ready`
    - `acceptance_criteria` set to match the checklist items verbatim (as plain strings, without the `[ ]` markers)
    - `updated` set to today's date
+
+   And update the item's note (in `cadence/user-stories/` or `cadence/tasks/`): add `- Spec: [[<id>-<slug>-spec]]` to its links, add the spec to `related`, and set `updated` to today. (A legacy item with no note yet: create one now in its type's folder, following the cadence-brain item note format.)
 8. Tell the user the item is `ready` and can be pulled into a sprint with `/cadence:sprint-plan`.
 
 ## Inputs
 
-`cadence/backlog.yml`, `cadence/designs/<id>.md`, `cadence/brain/*.md`.
+`cadence/backlog.yml`, the item's design doc, the vault's markdown notes.
 
 ## Outputs
 
-`cadence/specs/<id>.md` (new file), `cadence/backlog.yml` (item's `status`, `acceptance_criteria`, `updated` fields).
+`cadence/specs/<id>-<slug>-spec.md` (new file), the item's note (spec linked), `cadence/backlog.yml` (item's `status`, `acceptance_criteria`, `updated` fields).
 
 ## Error handling
 

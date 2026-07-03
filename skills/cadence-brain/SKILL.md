@@ -1,47 +1,94 @@
 ---
 name: cadence-brain
-description: Cadence's brain note format and the "check the brain first" mandate. Auto-loads whenever a cadence skill is about to start new work (refine, work, sprint-plan, standup, brainstorm, systematic-debugger, code-reviewer) or /cadence:review is about to commit.
+description: The cadence vault layout, the one note format every cadence markdown file follows, and the "check the brain first" mandate. Auto-loads whenever a cadence skill is about to start new work (refine, breakdown, work, sprint-plan, standup, brainstorm, systematic-debugger, code-reviewer) or /cadence:review is about to commit.
 user-invocable: false
 ---
 
-# Cadence Brain Rules
+# Cadence Vault Rules
 
 <important>
-- Before starting new work, search cadence/brain/*.md for notes related to the topic (by filename, tags, and heading text) -- prefer the cadence-brain MCP tools (search_notes, get_related) over raw greps when available. Surface what you find, including conflicting notes, before proceeding -- never silently pick a side.
-- Only the brain-curator agent writes or edits files in cadence/brain/. Other skills describe what happened; they do not write notes directly.
-- If the every-turn reminder or list_changed_notes reports hand-edited brain notes, surface them before relying on brain content -- the user's edits in Obsidian are ground truth.
+- Before starting new work, search the vault for notes related to the topic -- prefer the cadence-brain MCP tools (search_notes, get_related) over raw greps when available; they index every markdown note in cadence/. Surface what you find, including conflicting notes, before proceeding -- never silently pick a side.
+- Only the brain-curator agent writes or edits files in cadence/brain/, cadence/decisions/, and cadence/architecture/. Item notes, designs, and specs are written by their gated skills (refine, breakdown, spec). No other writes.
+- Status lives only in the YAML board (backlog.yml, sprint-N.yml). Notes never carry a status field -- a second copy would drift.
+- If the every-turn reminder or list_changed_notes reports hand-edited knowledge notes, surface them before relying on their content -- the user's edits in Obsidian are ground truth.
 - Every commit made by /cadence:review follows the message convention below and never includes an Anthropic or Claude co-author tag.
 </important>
 
 ## Purpose
 
-Defines the one note format used across cadence/brain/, and the commit message convention /cadence:review uses, so both stay consistent without a separate skill for each.
+Defines the vault layout, the shared note format that makes every cadence
+artifact a node in the Obsidian graph, and the commit message convention.
 
-## Brain note format
+## Vault layout
+
+`cadence/` is the Obsidian vault. Every markdown file in it follows the
+shared note format, so everything interconnects in Graph View:
+
+    cadence/
+      backlog.yml, sprint-N.yml         # the board: status, points, planning
+      epics/C-<n>-<slug>.md             # one item note per epic
+      user-stories/C-<n>-<slug>.md      # one item note per user story
+      tasks/C-<n>-<slug>.md             # one item note per task
+      designs/C-<n>-<slug>-design.md    # design doc per item
+      specs/C-<n>-<slug>-spec.md        # spec per leaf item
+      architecture/arch-<topic>.md      # how the system is shaped
+      decisions/adr-<NNN>-<slug>.md     # why it is shaped that way
+      brain/<topic>.md, moc-<topic>.md  # domain/process knowledge, MOCs
+
+Naming: `<slug>` is the item title in kebab-case, at most five words.
+`<NNN>` is a zero-padded ADR sequence (`adr-001-...`). Note basenames must be
+unique across the whole vault -- Obsidian wikilinks resolve by basename, which
+is why designs and specs carry their `-design`/`-spec` suffix.
+
+## Shared note format
 
     ---
-    type: domain          # domain | process | moc
+    type: epic            # epic | story | task | design | spec |
+                          # architecture | decision | domain | process | moc
     tags: [api/auth]      # hierarchical where a parent exists, max two levels
-    aliases: []           # optional alternate names Obsidian should resolve
+    aliases: []           # item notes carry their ticket id, e.g. ["C-12"]
     created: YYYY-MM-DD
     updated: YYYY-MM-DD
     related: ["[[other-note]]"]
-    sources: []            # URLs consulted, only if this note came from a web lookup
+    sources: []           # URLs consulted, only for web-informed content
     ---
 
-    # Title
+    # C-12: Title
 
-    Body prose. Reference ticket IDs as [[C-12]] even if C-12 has no note file --
-    Obsidian shows it as an unresolved link, which is still useful in the graph.
+    Body prose. Reference tickets as [[C-12]] -- the id is an alias of the
+    item note, so the link resolves and shows up in the graph.
 
     See also: [[other-note]]
 
-- `type: domain` -- architecture/codebase knowledge discovered while implementing.
-- `type: process` -- recurring estimation bias, blockers, or workflow friction.
-- `type: moc` -- a Map of Content: a hub note named `moc-<topic>.md` whose body is a curated list of [[links]] grouped under ## headings.
-- Tags nest under a broad top-level area using Obsidian's `parent/child` syntax (`api/auth`, `process/estimation`); reuse existing tags (see the list_tags MCP tool) instead of inventing synonyms; max two levels.
-- `aliases` -- optional alternate names; Obsidian resolves [[an alias]] to this note, cutting unresolved-link noise.
-- `sources` -- populate only when the note was informed by something looked up externally, per the anti-hallucination core value.
+Per-kind rules:
+
+- **Item notes** (`type: epic|story|task`): alias = the ticket id, so every
+  `[[C-<n>]]` anywhere in the vault lands on them. Body: one-paragraph
+  summary, then links -- `Design: [[...-design]]`, `Spec: [[...-spec]]`,
+  `Parent: [[...]]`, and a `Children:` list on containers. No status, no
+  acceptance criteria -- the board and the spec own those.
+- **Designs** (`type: design`) and **specs** (`type: spec`): keep their
+  existing body sections, plus frontmatter and a link back to their item note
+  (and the parent's design for breakdown children).
+- **Decisions** (`type: decision`): one ADR per significant choice --
+  context, the decision, alternatives rejected and why. Link every item note
+  the decision affects and any architecture notes it shapes.
+- **Architecture** (`type: architecture`): current-state descriptions of a
+  system area. Link the ADRs that produced the shape and the items that
+  touched it.
+- **Brain** (`type: domain|process|moc`): as before -- discovered knowledge,
+  process learnings, and Maps of Content (`moc-<topic>.md`) once a top-level
+  tag reaches 5 notes.
+
+Linking is bidirectional by convention: when a note links to another, add the
+back-reference to the target's `related` list.
+
+## Legacy paths
+
+Boards created before 0.10 have flat `designs/<id>.md` and `specs/<id>.md`
+files without frontmatter. Read them where the new path is missing; whenever
+a skill rewrites one anyway, move it to the new name, add frontmatter, and
+update inbound links -- opportunistic migration, no bulk rewrites.
 
 ## Commit message convention
 
@@ -49,9 +96,7 @@ Format: `<verb>: <ticket title> (<id>)`, e.g. `feat: add password reset endpoint
 
 Never include a `Co-Authored-By: Claude` or any Anthropic attribution line. Never use `--no-verify`. The plugin's PreToolUse guard hook blocks commits that violate either rule -- if a commit is rejected, fix the message or the failing check, never work around the hook.
 
-This skill is reference material only; the brain-curator agent is the sole writer of cadence/brain/ files.
-
 ## Error handling
 
-- **Brain search finds nothing relevant:** proceed normally, note that no prior context was found.
-- **Brain search finds a conflicting note:** surface it to the user explicitly before proceeding.
+- **Vault search finds nothing relevant:** proceed normally, note that no prior context was found.
+- **Vault search finds a conflicting note:** surface it to the user explicitly before proceeding.
