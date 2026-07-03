@@ -19,8 +19,9 @@ Defines the one note format used across cadence/brain/, and the commit message c
 ## Brain note format
 
     ---
-    type: domain          # domain | process
-    tags: [tag-one, tag-two]
+    type: domain          # domain | process | moc
+    tags: [api/auth]      # hierarchical where a parent exists, max two levels
+    aliases: []           # optional alternate names Obsidian should resolve
     created: YYYY-MM-DD
     updated: YYYY-MM-DD
     related: ["[[other-note]]"]
@@ -36,6 +37,9 @@ Defines the one note format used across cadence/brain/, and the commit message c
 
 - `type: domain` -- architecture/codebase knowledge discovered while implementing.
 - `type: process` -- recurring estimation bias, blockers, or workflow friction.
+- `type: moc` -- a Map of Content: a hub note named `moc-<topic>.md` whose body is a curated list of [[links]] grouped under ## headings.
+- Tags nest under a broad top-level area using Obsidian's `parent/child` syntax (`api/auth`, `process/estimation`); reuse existing tags (see the list_tags MCP tool) instead of inventing synonyms; max two levels.
+- `aliases` -- optional alternate names; Obsidian resolves [[an alias]] to this note, cutting unresolved-link noise.
 - `sources` -- populate only when the note was informed by something looked up externally, per the anti-hallucination core value.
 
 ## Commit message convention
