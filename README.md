@@ -82,20 +82,24 @@ architecture, and brain notes all interconnect in Graph View:
 
     cadence/
       backlog.yml, sprint-1.yml         # the board: status, points, planning
-      epics/C-<n>-<slug>.md             # one item note per epic
-      user-stories/C-<n>-<slug>.md      # one item note per user story
-      tasks/C-<n>-<slug>.md             # one item note per task
-      designs/C-<n>-<slug>-design.md    # design doc per item
-      specs/C-<n>-<slug>-spec.md        # spec per leaf item
-      architecture/arch-<topic>.md      # how the system is shaped
+      epics/EP-<n>.md                   # one item note per epic
+      user-stories/US-<n>.md            # one item note per user story
+      tasks/TK-<n>.md                   # one item note per task
+      designs/DS-<n>.md                 # design doc per item
+      specs/SP-<n>.md                   # spec per leaf item
+      architecture/AR-<topic>.md        # how the system is shaped
       decisions/adr-<NNN>-<slug>.md     # why it is shaped that way (ADRs)
       brain/*.md, brain/moc-<topic>.md  # domain/process knowledge, MOCs
       .brain-state.json                 # hand-edit tracking baseline
 
-Item notes carry their ticket id as an Obsidian alias, so `[[C-12]]` anywhere
-in the vault resolves to the item. Status lives only in the YAML board --
-notes never duplicate it. Boards from before 0.10 keep working: legacy flat
-`designs/<id>.md` / `specs/<id>.md` files are read as fallbacks and migrated
+`<n>` is the ticket's board number: ticket `C-7` maps to `EP-7`/`US-7`/`TK-7`
+(by type) plus `DS-7` and `SP-7`, so one number traces a ticket across every
+folder. Links always use these typed names (`[[US-7]]`, `[[DS-7]]`) because
+Obsidian resolves wikilinks by exact filename only -- aliases never resolve a
+raw link. Item notes carry the board id and title as aliases for search and
+autocomplete. Status lives only in the YAML board -- notes never duplicate
+it. Older boards keep working: legacy flat `designs/<id>.md` / `specs/<id>.md`
+and 0.10-style slug names are read as fallbacks and migrated
 opportunistically.
 
 Run `/cadence:install-obsidian` once to install Obsidian (if needed) and
@@ -129,8 +133,11 @@ the vault as structured tools: `search_notes`, `read_note`, `write_note`,
 `list_backlinks`, `get_related`, `list_orphans`, `list_unresolved_links`,
 `list_stray_notes`, `list_tags`, `list_changed_notes`.
 It indexes every markdown note under `<project>/cadence/` per call (item
-notes, designs, specs, decisions, architecture, brain), resolving ticket-id
-aliases like `[[C-12]]`, so results always reflect the files on disk.
+notes, designs, specs, decisions, architecture, brain), so results always
+reflect the files on disk. Lookups accept aliases (asking for `C-12` finds
+`EP-12`), while link-resolution checks (`list_unresolved_links`,
+`list_stray_notes`) deliberately match Obsidian's real behavior: exact
+filenames only.
 `write_note` targets the knowledge folders only (`brain/` by default, or
 `folder: decisions` / `folder: architecture`). Registered via `.mcp.json`;
 agents without a `tools:` restriction (like `brain-curator`) can use these

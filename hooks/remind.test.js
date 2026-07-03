@@ -28,14 +28,28 @@ test('remind.js appends a stray-note line when a root file shadows an alias', ()
   const epics = path.join(vault, 'epics');
   fs.mkdirSync(epics, { recursive: true });
   fs.writeFileSync(
-    path.join(epics, 'C-1-payment-flow.md'),
-    '---\ntype: epic\naliases: ["C-1"]\n---\n\n# C-1: Payment flow\n'
+    path.join(epics, 'EP-1.md'),
+    '---\ntype: epic\naliases: ["C-1", "Payment flow"]\n---\n\n# C-1: Payment flow\n'
   );
   fs.writeFileSync(path.join(vault, 'C-1.md'), '');
   const output = execFileSync('node', [REMIND_PATH], { encoding: 'utf8', cwd: tmpDir });
   assert.ok(output.startsWith(EXPECTED_MESSAGE));
   assert.match(output, /1 stray note\(s\) hijacking wikilinks/);
-  assert.match(output, /C-1\.md \(empty, shadows C-1-payment-flow\)/);
+  assert.match(output, /C-1\.md \(empty, shadows EP-1\)/);
+});
+
+test('remind.js appends an unresolved-link line for click-trap wikilinks', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  const brain = path.join(tmpDir, 'cadence', 'brain');
+  fs.mkdirSync(brain, { recursive: true });
+  fs.writeFileSync(
+    path.join(brain, 'api-auth.md'),
+    '---\ntype: domain\nrelated: ["[[nonexistent-note]]"]\n---\n\n# API auth\n\nSee [[nonexistent-note]].\n'
+  );
+  const output = execFileSync('node', [REMIND_PATH], { encoding: 'utf8', cwd: tmpDir });
+  assert.ok(output.startsWith(EXPECTED_MESSAGE));
+  assert.match(output, /1 unresolved wikilink target\(s\)/);
+  assert.match(output, /\[\[nonexistent-note\]\] \(in api-auth\)/);
 });
 
 test('remind.js appends a hand-edit line when tracked knowledge notes changed', () => {

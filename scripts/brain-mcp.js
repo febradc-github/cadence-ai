@@ -93,8 +93,10 @@ function requireBrain(dir) {
   return notes;
 }
 
-// Matches by note name or frontmatter alias (both case-insensitive), so
-// [[C-12]] resolves to the item note carrying aliases: ["C-12"].
+// Matches by note name or frontmatter alias (both case-insensitive). For
+// convenience lookups (read_note, get_related) only -- Obsidian does NOT
+// resolve a raw [[link]] via aliases, so link-resolution checks must use
+// resolvesByName instead.
 function findNote(notes, name) {
   const lower = String(name).toLowerCase();
   return (
@@ -102,6 +104,13 @@ function findNote(notes, name) {
     notes.find((n) => n.aliases.some((a) => a.toLowerCase() === lower)) ||
     null
   );
+}
+
+// Obsidian's actual wikilink resolution: exact filename only. Aliases feed
+// the autocomplete UI but never resolve a typed [[target]].
+function resolvesByName(notes, target) {
+  const lower = String(target).toLowerCase();
+  return notes.find((n) => n.name.toLowerCase() === lower) || null;
 }
 
 function backlinksFor(notes, name) {
@@ -225,7 +234,7 @@ function listOrphans(dir) {
   if (notes === null) return { orphans: [], note: 'no cadence/ directory in this project' };
   const orphans = notes
     .filter((note) => {
-      const resolvedOut = note.links.filter((l) => findNote(notes, l));
+      const resolvedOut = note.links.filter((l) => resolvesByName(notes, l));
       return resolvedOut.length === 0 && backlinksFor(notes, note.name).length === 0;
     })
     .map((n) => n.name);
@@ -238,7 +247,7 @@ function listUnresolvedLinks(dir) {
   const byTarget = new Map();
   for (const note of notes) {
     for (const link of note.links) {
-      if (findNote(notes, link)) continue;
+      if (resolvesByName(notes, link)) continue;
       const key = link.toLowerCase();
       if (!byTarget.has(key)) byTarget.set(key, { target: link, sources: [] });
       const entry = byTarget.get(key);
@@ -338,6 +347,8 @@ function listStrayNotes(dir) {
       (n) => n !== note && n.aliases.some((a) => a.toLowerCase() === note.name.toLowerCase())
     );
     if (shadowed) reasons.push('alias-shadow');
+    const twin = notes.find((n) => n !== note && n.name.toLowerCase() === note.name.toLowerCase());
+    if (twin) reasons.push('name-collision');
     if (reasons.length) {
       strays.push({
         name: note.name,
@@ -345,6 +356,7 @@ function listStrayNotes(dir) {
         empty: note.content.trim().length === 0,
         reasons,
         shadows: shadowed ? shadowed.name : null,
+        collidesWith: twin ? twin.relPath : null,
       });
     }
   }
@@ -379,7 +391,7 @@ const TOOLS = [
   {
     name: 'read_note',
     description:
-      'Read the full raw content of one vault note by name or alias (case-insensitive, no .md extension). Ticket ids like C-12 resolve to the item note carrying that alias.',
+      'Read the full raw content of one vault note by name or alias (case-insensitive, no .md extension). Item notes are named by ticket id, so C-12 reads the item note directly.',
     inputSchema: { type: 'object', properties: { name: { type: 'string', description: 'Note name or alias without extension' } }, required: ['name'] },
     handler: readNote,
   },
@@ -420,7 +432,7 @@ const TOOLS = [
   {
     name: 'list_unresolved_links',
     description:
-      'List every [[link target]] that resolves to no note file or alias, with the notes referencing it — candidates for new notes.',
+      'List every [[link target]] with no note file of that exact name, with the notes referencing it. Matches Obsidian\'s real resolution: aliases do NOT resolve a raw [[link]], so an alias-only match still counts as unresolved. Every entry is a click-trap that would mint a stray note.',
     inputSchema: { type: 'object', properties: {} },
     handler: listUnresolvedLinks,
   },
@@ -434,7 +446,7 @@ const TOOLS = [
   {
     name: 'list_stray_notes',
     description:
-      'List stray notes that hijack wikilinks: files at the vault root (cadence never writes one) or files whose name equals another note\'s alias (Obsidian resolves exact filenames before aliases, so an auto-created empty C-2.md captures every [[C-2]]). Delete empty strays; fold a non-empty stray\'s content into the real note (or migrate a legacy design/spec to its typed name) before deleting.',
+      'List stray/conflicting notes that break wikilink resolution: files at the vault root (cadence never writes one), duplicate basenames anywhere in the vault (ambiguous [[links]]), or files named exactly like another note\'s alias. Delete empty strays; fold a non-empty stray\'s content into the real note (or migrate a legacy-named file to its current convention) before deleting.',
     inputSchema: { type: 'object', properties: {} },
     handler: listStrayNotes,
   },
@@ -452,7 +464,7 @@ const TOOLS = [
   },
 ];
 
-const SERVER_INFO = { name: 'cadence-brain', version: '0.10.0' };
+const SERVER_INFO = { name: 'cadence-brain', version: '0.11.0' };
 
 function handleMessage(msg, dir) {
   const hasId = msg.id !== undefined && msg.id !== null;

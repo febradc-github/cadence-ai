@@ -25,23 +25,23 @@ Turns a raw idea ($ARGUMENTS) into an approved design doc and a tracked backlog 
 2. Compute the next ticket ID: scan `cadence/backlog.yml` and every `cadence/sprint-*.yml` for existing `C-<N>` ids across all `items` lists; the new id is `C-<max+1>`, or `C-1` if none exist. If `cadence/backlog.yml` does not exist yet, it will be created in step 6 with `items: []`.
 3. Run a one-question-at-a-time dialogue with the user to establish:
    - A clear title and one-paragraph description of the problem.
-   - **Architecture fit:** where this sits in the existing system. Read any related `cadence/architecture/arch-*.md` and `cadence/decisions/adr-*.md` notes first (the step 1 search surfaces them); ask about integration points, affected components, and whether the work bends any recorded decision. If it contradicts an existing ADR, surface that conflict explicitly -- the user decides whether the old decision is superseded.
+   - **Architecture fit:** where this sits in the existing system. Read any related `cadence/architecture/AR-*.md` and `cadence/decisions/adr-*.md` notes first (the step 1 search surfaces them); ask about integration points, affected components, and whether the work bends any recorded decision. If it contradicts an existing ADR, surface that conflict explicitly -- the user decides whether the old decision is superseded.
    - **Design decisions:** the approach, and any choice between real alternatives this work forces (storage, protocol, library, pattern). Close these gaps now -- a ticket that reaches `/cadence:work` with an open design question was refined too early.
    - Non-empty `acceptance_criteria` (a list of concrete, checkable statements).
    - A `points` estimate (any positive integer the user agrees to).
    - `assignee`: ask who implements this -- `claude` or `human`. Default to `claude` if the user has no preference.
    Do not proceed to step 4 while any of these is missing or the user's answer is ambiguous.
    While talking, assess scale: if the idea contains multiple independent deliverables, or the estimate lands above 8 points, tell the user this is epic-sized and will be recorded as `type: epic`, with acceptance criteria at the outcome level (what the whole epic must achieve). The pieces get their own criteria later via `/cadence:breakdown`.
-4. Derive `<slug>` from the title (kebab-case, at most five words). Before writing, check whether any `cadence/designs/<id>-*.md` (or legacy `cadence/designs/<id>.md`) already exists. Since `id` is computed from `cadence/backlog.yml` and `cadence/sprint-*.yml` (step 2), a file can exist at that path with no matching entry in either source -- this means an earlier refine session was abandoned after writing its design doc but before the user approved it in step 6. If a file exists, warn the user that a draft already exists at `<id>` and is likely an abandoned prior session, and ask whether to overwrite it or start a fresh draft. If they want a fresh draft, recompute using `id+1` and repeat this check against the new id (it too may already exist). Do not silently overwrite an existing design doc.
+4. The ticket's number `<n>` (from `<id>` = `C-<n>`) names every file: design `DS-<n>`, spec `SP-<n>`, item note `EP-<n>` or `US-<n>`. Before writing, check whether `cadence/designs/DS-<n>.md` (or a legacy `cadence/designs/<id>*.md`) already exists. Since `id` is computed from `cadence/backlog.yml` and `cadence/sprint-*.yml` (step 2), a file can exist at that path with no matching entry in either source -- this means an earlier refine session was abandoned after writing its design doc but before the user approved it in step 6. If a file exists, warn the user that a draft already exists at `<id>` and is likely an abandoned prior session, and ask whether to overwrite it or start a fresh draft. If they want a fresh draft, recompute using `id+1` and repeat this check against the new id (it too may already exist). Do not silently overwrite an existing design doc.
 
-   Write `cadence/designs/<id>-<slug>-design.md`:
+   Write `cadence/designs/DS-<n>.md`:
 
        ---
        type: design
        tags: []
        created: <today, YYYY-MM-DD>
        updated: <today, YYYY-MM-DD>
-       related: ["[[<id>-<slug>]]"]
+       related: ["[[<EP-n|US-n>]]"]
        sources: []
        ---
 
@@ -52,8 +52,9 @@ Turns a raw idea ($ARGUMENTS) into an approved design doc and a tracked backlog 
 
        ## Architecture
        <where this sits in the system: affected components, integration
-       points, and links to the [[arch-...]] and [[adr-...]] notes it relies
-       on or bends>
+       points, and links to the [[AR-...]] and [[adr-...]] notes it relies
+       on or bends -- link only notes that exist (verified in step 1's
+       search); name a missing one in plain text instead>
 
        ## Approach
        <the approach agreed on>
@@ -87,25 +88,27 @@ Turns a raw idea ($ARGUMENTS) into an approved design doc and a tracked backlog 
 
    For an epic-sized item (step 3), add `type: epic` after `title`.
 
-   Also write the item note -- `cadence/epics/<id>-<slug>.md` for an epic, `cadence/user-stories/<id>-<slug>.md` otherwise:
+   Also write the item note -- `cadence/epics/EP-<n>.md` for an epic, `cadence/user-stories/US-<n>.md` otherwise:
 
        ---
        type: <epic|story>
        tags: []
-       aliases: ["<id>"]
+       aliases: ["<id>", "<title>"]
        created: <today, YYYY-MM-DD>
        updated: <today, YYYY-MM-DD>
-       related: ["[[<id>-<slug>-design]]"]
+       related: ["[[DS-<n>]]"]
        ---
 
        # <id>: <title>
 
        <one-paragraph description>
 
-       - Design: [[<id>-<slug>-design]]
+       - Design: [[DS-<n>]]
 
-   The `aliases` entry makes every `[[<id>]]` reference in the vault resolve to this note.
-7. If the dialogue surfaced something worth remembering, dispatch the `brain-curator` agent with a short description of it. In particular: a design choice between real alternatives becomes a decision record (the curator files it in `cadence/decisions/`), and newly established system shape becomes an architecture note (`cadence/architecture/`) -- tell the curator which items ([[<id>-<slug>]]) the note affects so it links them.
+   The aliases make the quick switcher and search_notes find the note by board id or title -- but aliases never resolve raw wikilinks, so links always use the typed name ([[EP-<n>]]/[[US-<n>]]), never [[<id>]].
+
+   Write the design doc and the item note in the same pass -- they link each other, so stopping between them leaves a dangling link. Before finishing, confirm every [[wikilink]] you added resolves to an existing note filename (list_unresolved_links); an unresolved link is a click-trap that mints a stray note in Obsidian.
+7. If the dialogue surfaced something worth remembering, dispatch the `brain-curator` agent with a short description of it. In particular: a design choice between real alternatives becomes a decision record (the curator files it in `cadence/decisions/`), and newly established system shape becomes an architecture note (`cadence/architecture/AR-<topic>.md`) -- tell the curator which item notes ([[EP-<n>]]/[[US-<n>]]) the note affects so it links them.
 8. For a regular item, tell the user the design is approved and recorded, and that `/cadence:spec <id>` is the next step. For an epic, tell them it needs breaking into stories before anything can be spec'd, and invoke the `cadence-breakdown` skill with the epic's id (its own approval gate governs the split).
 
 ## Inputs
@@ -114,7 +117,7 @@ The vault's markdown notes (`cadence/brain/`, `cadence/decisions/`, `cadence/arc
 
 ## Outputs
 
-`cadence/designs/<id>-<slug>-design.md` (new file), `cadence/epics/<id>-<slug>.md` or `cadence/user-stories/<id>-<slug>.md` (item note), `cadence/backlog.yml` (new or appended item with `status: idea`), possibly a brain-curator dispatch producing `cadence/decisions/` or `cadence/architecture/` notes.
+`cadence/designs/DS-<n>.md` (new file), `cadence/epics/EP-<n>.md` or `cadence/user-stories/US-<n>.md` (item note), `cadence/backlog.yml` (new or appended item with `status: idea`), possibly a brain-curator dispatch producing `cadence/decisions/` or `cadence/architecture/` notes.
 
 ## Error handling
 

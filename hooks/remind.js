@@ -12,8 +12,9 @@ const MESSAGE =
 
 let handEditLine = '';
 let strayLine = '';
+let unresolvedLine = '';
 try {
-  const { snapshotBrain, readState, diffBrainState, listStrayNotes } = require(path.join(__dirname, '..', 'scripts', 'brain-mcp.js'));
+  const { snapshotBrain, readState, diffBrainState, listStrayNotes, listUnresolvedLinks } = require(path.join(__dirname, '..', 'scripts', 'brain-mcp.js'));
   const current = snapshotBrain(cadenceDir);
   const state = current && readState(cadenceDir);
   if (current && state) {
@@ -27,12 +28,20 @@ try {
   if (strays.length > 0) {
     const described = strays
       .slice(0, 5)
-      .map((s) => `${s.relPath} (${s.empty ? 'empty' : 'has content'}${s.shadows ? `, shadows ${s.shadows}` : ''})`)
+      .map((s) => `${s.relPath} (${s.empty ? 'empty' : 'has content'}${s.shadows ? `, shadows ${s.shadows}` : ''}${s.collidesWith ? `, collides with ${s.collidesWith}` : ''})`)
       .join(', ');
     strayLine = `${strays.length} stray note(s) hijacking wikilinks (Obsidian resolves exact filenames before aliases): ${described}. Usually Obsidian's "create new note" on a click of an unresolved-looking link. Surface to the user, then delete empty strays; a stray with content: fold it into the real note (or migrate a legacy design/spec to its typed name) before deleting.\n`;
+  }
+  const { unresolved } = listUnresolvedLinks(cadenceDir);
+  if (unresolved && unresolved.length > 0) {
+    const described = unresolved
+      .slice(0, 5)
+      .map((u) => `[[${u.target}]] (in ${u.sources.slice(0, 2).join(', ')})`)
+      .join(', ');
+    unresolvedLine = `${unresolved.length} unresolved wikilink target(s) in the vault: ${described}. Each is a click-trap -- Obsidian offers to create the missing note, minting a stray. Fix the link to an existing note/alias, create the missing note properly (item notes via their gated skill, knowledge notes via brain-curator), or drop the link.\n`;
   }
 } catch {
   // the reminder must never break on tracking errors
 }
 
-process.stdout.write(MESSAGE + handEditLine + strayLine);
+process.stdout.write(MESSAGE + handEditLine + strayLine + unresolvedLine);

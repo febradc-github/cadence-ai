@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.11.0 — 2026-07-03
+
+- Corrected a wrong assumption from 0.10.0: Obsidian resolves a `[[wikilink]]`
+  by exact filename only — aliases feed autocomplete and the quick switcher
+  but never resolve a typed link, so alias-based `[[C-2]]` references were
+  unresolved click-traps. Note naming is now typed prefixes carrying the
+  ticket number: `EP-<n>` (epics), `US-<n>` (user stories), `TK-<n>` (tasks),
+  `DS-<n>` (designs), `SP-<n>` (specs), `AR-<topic>` (architecture); ticket
+  `C-7` maps to `EP-7`/`US-7`/`TK-7` plus `DS-7`/`SP-7`, so one number traces
+  a ticket across every folder and every link resolves by filename. Board ids
+  stay `C-<n>`; item notes carry the board id and title as search aliases.
+  Links never use a bare board id — `[[US-7]]`, not `[[C-7]]`.
+- Links must exist before they're written: every skill and the brain-curator
+  verify a `[[target]]` resolves to a real filename before adding it to a
+  `related` list or body (mutually-linked note sets are written in one pass
+  and checked with `list_unresolved_links`); the curator ends each dispatch
+  by confirming it introduced no unresolved targets.
+- The every-turn reminder now also lists unresolved wikilink targets
+  vault-wide — each one is a click-trap that would mint a stray note — with
+  instructions to fix, create properly, or drop the link.
+- MCP server semantics follow Obsidian's: `list_unresolved_links` and
+  `list_orphans` count alias-only matches as unresolved (an alias never
+  resolves a raw link), while read/search lookups still accept aliases as a
+  convenience. `list_stray_notes` additionally flags duplicate basenames
+  anywhere in the vault (ambiguous links), reported as `name-collision` with
+  the colliding path.
+
 ## 0.10.1 — 2026-07-03
 
 - Stray-note defense. Clicking an unresolved-looking wikilink in Obsidian can

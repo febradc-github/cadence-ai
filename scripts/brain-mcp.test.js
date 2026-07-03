@@ -37,7 +37,7 @@ function makeFixture() {
   fs.writeFileSync(path.join(vault, '.obsidian', 'ignored.md'), '# never indexed\n');
   fs.writeFileSync(
     path.join(brain, 'api-auth.md'),
-    '---\ntype: domain\ntags: [api, auth]\ncreated: 2026-07-01\nupdated: 2026-07-01\nrelated: ["[[jwt-tokens]]"]\nsources: []\n---\n\n# API auth\n\nUses [[jwt-tokens]] everywhere. Built for [[C-12]].\n'
+    '---\ntype: domain\ntags: [api, auth]\ncreated: 2026-07-01\nupdated: 2026-07-01\nrelated: ["[[jwt-tokens]]"]\nsources: []\n---\n\n# API auth\n\nUses [[jwt-tokens]] everywhere. Built for [[EP-12]].\n'
   );
   fs.writeFileSync(
     path.join(brain, 'jwt-tokens.md'),
@@ -49,11 +49,14 @@ function makeFixture() {
   );
   fs.writeFileSync(
     path.join(decisions, 'adr-001-use-jwt.md'),
-    '---\ntype: decision\ntags: [api]\naliases: []\ncreated: 2026-07-03\nupdated: 2026-07-03\nrelated: []\nsources: []\n---\n\n# ADR-001: Use JWT\n\nApplies to [[C-12]]. See [[jwt-tokens]].\n'
+    '---\ntype: decision\ntags: [api]\naliases: []\ncreated: 2026-07-03\nupdated: 2026-07-03\nrelated: []\nsources: []\n---\n\n# ADR-001: Use JWT\n\nApplies to [[EP-12]]. See [[jwt-tokens]].\n'
   );
+  // Item notes are named by type prefix + ticket number (epic C-12 -> EP-12)
+  // because Obsidian resolves [[links]] by exact filename only; the board id
+  // and the title are aliases for search/autocomplete, never for resolution.
   fs.writeFileSync(
-    path.join(epics, 'C-12-payment-flow.md'),
-    '---\ntype: epic\ntags: [payments]\naliases: ["C-12"]\ncreated: 2026-07-03\nupdated: 2026-07-03\nrelated: []\n---\n\n# C-12: Payment flow\n\nDecided in [[adr-001-use-jwt]].\n'
+    path.join(epics, 'EP-12.md'),
+    '---\ntype: epic\ntags: [payments]\naliases: ["C-12", "Payment flow"]\ncreated: 2026-07-03\nupdated: 2026-07-03\nrelated: []\n---\n\n# C-12: Payment flow\n\nDecided in [[adr-001-use-jwt]].\n'
   );
   return { root, vault, brain, decisions, epics };
 }
@@ -85,29 +88,31 @@ test('loadBrain returns null for a missing dir and indexes the whole vault other
   const notes = loadBrain(vault);
   assert.deepEqual(
     notes.map((n) => n.name).sort(),
-    ['C-12-payment-flow', 'adr-001-use-jwt', 'api-auth', 'jwt-tokens', 'loose-note']
+    ['EP-12', 'adr-001-use-jwt', 'api-auth', 'jwt-tokens', 'loose-note']
   );
   const auth = notes.find((n) => n.name === 'api-auth');
-  assert.deepEqual(auth.links, ['jwt-tokens', 'C-12']);
+  assert.deepEqual(auth.links, ['jwt-tokens', 'EP-12']);
   assert.deepEqual(auth.tags, ['api', 'auth']);
   assert.equal(auth.folder, 'brain');
-  const epic = notes.find((n) => n.name === 'C-12-payment-flow');
+  const epic = notes.find((n) => n.name === 'EP-12');
   assert.equal(epic.folder, 'epics');
-  assert.deepEqual(epic.aliases, ['C-12']);
+  assert.deepEqual(epic.aliases, ['C-12', 'Payment flow']);
 });
 
 test('searchNotes matches names, tags, and content lines across folders', () => {
   const { vault } = makeFixture();
   const byContent = searchNotes(vault, { query: 'everywhere' });
   assert.deepEqual(byContent.results.map((r) => r.name), ['api-auth']);
-  assert.equal(byContent.results[0].matches[0].text, 'Uses [[jwt-tokens]] everywhere. Built for [[C-12]].');
+  assert.equal(byContent.results[0].matches[0].text, 'Uses [[jwt-tokens]] everywhere. Built for [[EP-12]].');
   const byTag = searchNotes(vault, { query: 'estimation' });
   assert.deepEqual(byTag.results.map((r) => r.name), ['loose-note']);
   const inDecisions = searchNotes(vault, { query: 'adr-001' });
   // The ADR itself plus the epic whose body links to it.
   assert.deepEqual(inDecisions.results.map((r) => r.folder), ['decisions', 'epics']);
-  const byAlias = searchNotes(vault, { query: 'c-12' });
-  assert.ok(byAlias.results.some((r) => r.name === 'C-12-payment-flow'));
+  const byAlias = searchNotes(vault, { query: 'payment' });
+  assert.ok(byAlias.results.some((r) => r.name === 'EP-12'));
+  const byTicketId = searchNotes(vault, { query: 'c-12' });
+  assert.ok(byTicketId.results.some((r) => r.name === 'EP-12'));
   assert.deepEqual(searchNotes(vault, { query: 'zzz-nothing' }).results, []);
 });
 
@@ -117,26 +122,28 @@ test('searchNotes on a missing vault returns empty with a note', () => {
   assert.match(result.note, /no cadence/);
 });
 
-test('readNote resolves names case-insensitively and aliases to item notes', () => {
+test('readNote resolves names case-insensitively and aliases as a convenience', () => {
   const { vault } = makeFixture();
   assert.match(readNote(vault, { name: 'API-Auth' }).content, /# API auth/);
   assert.match(readNote(vault, { name: 'C-12' }).content, /# C-12: Payment flow/);
+  assert.match(readNote(vault, { name: 'payment FLOW' }).content, /# C-12: Payment flow/);
   assert.throws(() => readNote(vault, { name: 'api' }), /api-auth/);
 });
 
-test('listBacklinks finds linking notes across folders, resolving aliases', () => {
+test('listBacklinks finds linking notes across folders, alias queries included', () => {
   const { vault } = makeFixture();
   assert.deepEqual(listBacklinks(vault, { name: 'jwt-tokens' }).backlinks, ['api-auth', 'adr-001-use-jwt']);
-  // [[C-12]] links land on the epic note via its alias.
+  assert.deepEqual(listBacklinks(vault, { name: 'EP-12' }).backlinks, ['api-auth', 'adr-001-use-jwt']);
+  // Asking by the epic's board-id or title alias finds links to its real name.
   assert.deepEqual(listBacklinks(vault, { name: 'C-12' }).backlinks, ['api-auth', 'adr-001-use-jwt']);
-  assert.deepEqual(listBacklinks(vault, { name: 'C-12-payment-flow' }).backlinks, ['api-auth', 'adr-001-use-jwt']);
+  assert.deepEqual(listBacklinks(vault, { name: 'Payment flow' }).backlinks, ['api-auth', 'adr-001-use-jwt']);
   assert.deepEqual(listBacklinks(vault, { name: 'loose-note' }).backlinks, []);
 });
 
 test('getRelated returns outgoing, backlinks, and shared tags', () => {
   const { vault } = makeFixture();
   const related = getRelated(vault, { name: 'api-auth' });
-  assert.deepEqual(related.outgoing, ['jwt-tokens', 'C-12']);
+  assert.deepEqual(related.outgoing, ['jwt-tokens', 'EP-12']);
   assert.deepEqual(related.backlinks, ['jwt-tokens']);
   assert.deepEqual(related.sharedTags, [{ tag: 'api', notes: ['jwt-tokens', 'adr-001-use-jwt'] }]);
 });
@@ -146,13 +153,24 @@ test('listOrphans finds notes with no resolved links either way', () => {
   assert.deepEqual(listOrphans(vault, {}).orphans, ['loose-note']);
 });
 
-test('listUnresolvedLinks treats alias-resolved targets as resolved', () => {
+test('listUnresolvedLinks matches Obsidian: exact filename only, aliases never resolve', () => {
   const { vault } = makeFixture();
-  // [[C-12]] resolves via the epic note's alias, so nothing is unresolved.
+  // Every [[link]] in the fixture targets a real filename, so nothing is unresolved.
   assert.deepEqual(listUnresolvedLinks(vault, {}).unresolved, []);
-  fs.rmSync(path.join(vault, 'epics', 'C-12-payment-flow.md'));
+  fs.rmSync(path.join(vault, 'epics', 'EP-12.md'));
   assert.deepEqual(listUnresolvedLinks(vault, {}).unresolved, [
-    { target: 'C-12', sources: ['api-auth', 'adr-001-use-jwt'] },
+    { target: 'EP-12', sources: ['api-auth', 'adr-001-use-jwt'] },
+  ]);
+});
+
+test('listUnresolvedLinks counts an alias-only match as unresolved (a click-trap)', () => {
+  const { vault, brain } = makeFixture();
+  fs.writeFileSync(path.join(brain, 'pretty.md'), '---\naliases: ["nick"]\n---\n\n# Pretty\n');
+  fs.writeFileSync(path.join(brain, 'zz-linker.md'), '# Linker\n\nSee [[nick]] and [[pretty]].\n');
+  // [[pretty]] resolves by filename; [[nick]] only matches an alias, which
+  // Obsidian does not resolve -- clicking it would mint a stray nick.md.
+  assert.deepEqual(listUnresolvedLinks(vault, {}).unresolved, [
+    { target: 'nick', sources: ['zz-linker'] },
   ]);
 });
 
@@ -160,32 +178,43 @@ test('listStrayNotes flags vault-root files and alias shadows, and nothing else'
   const { vault } = makeFixture();
   assert.deepEqual(listStrayNotes(vault, {}).strays, []);
 
-  // Obsidian's click-artifact: an empty exact-name note at the vault root
-  // that captures every [[C-12]] meant for the epic's alias.
+  // Obsidian's click-artifact: an empty note at the vault root named like
+  // the epic's board-id alias.
   fs.writeFileSync(path.join(vault, 'C-12.md'), '');
   // A root note with content and no alias collision: still stray (root).
   fs.writeFileSync(path.join(vault, 'scratch.md'), '# Scratch\n');
 
-  const { strays } = listStrayNotes(vault, {});
+  const strays = listStrayNotes(vault, {}).strays.sort((a, b) => (a.relPath < b.relPath ? -1 : 1));
   assert.deepEqual(strays, [
     {
       name: 'C-12',
       relPath: 'C-12.md',
       empty: true,
       reasons: ['vault-root', 'alias-shadow'],
-      shadows: 'C-12-payment-flow',
+      shadows: 'EP-12',
+      collidesWith: null,
     },
-    { name: 'scratch', relPath: 'scratch.md', empty: false, reasons: ['vault-root'], shadows: null },
+    { name: 'scratch', relPath: 'scratch.md', empty: false, reasons: ['vault-root'], shadows: null, collidesWith: null },
   ]);
 });
 
 test('listStrayNotes flags an alias shadow inside a folder too', () => {
   const { vault } = makeFixture();
-  // e.g. a legacy flat design file named exactly like a ticket id.
+  // e.g. a stale file named exactly like a ticket-id alias.
   fs.writeFileSync(path.join(vault, 'decisions', 'C-12.md'), '# stale\n');
   const { strays } = listStrayNotes(vault, {});
   assert.deepEqual(strays, [
-    { name: 'C-12', relPath: 'decisions/C-12.md', empty: false, reasons: ['alias-shadow'], shadows: 'C-12-payment-flow' },
+    { name: 'C-12', relPath: 'decisions/C-12.md', empty: false, reasons: ['alias-shadow'], shadows: 'EP-12', collidesWith: null },
+  ]);
+});
+
+test('listStrayNotes flags duplicate basenames anywhere in the vault', () => {
+  const { vault, brain } = makeFixture();
+  fs.writeFileSync(path.join(brain, 'EP-12.md'), '# duplicate\n');
+  const strays = listStrayNotes(vault, {}).strays.sort((a, b) => (a.relPath < b.relPath ? -1 : 1));
+  assert.deepEqual(strays, [
+    { name: 'EP-12', relPath: 'brain/EP-12.md', empty: false, reasons: ['name-collision'], shadows: null, collidesWith: 'epics/EP-12.md' },
+    { name: 'EP-12', relPath: 'epics/EP-12.md', empty: false, reasons: ['name-collision'], shadows: null, collidesWith: 'brain/EP-12.md' },
   ]);
 });
 
@@ -212,7 +241,7 @@ test('writeNote rejects bad names, folders, and collisions with workflow notes',
   assert.throws(() => writeNote(vault, { name: '../evil', content: 'x' }), /name/);
   assert.throws(() => writeNote(vault, { name: 'ok' }), /content/);
   assert.throws(() => writeNote(vault, { name: 'x', content: 'x', folder: 'epics' }), /invalid folder/);
-  assert.throws(() => writeNote(vault, { name: 'C-12-payment-flow', content: 'x' }), /not curator-owned/);
+  assert.throws(() => writeNote(vault, { name: 'EP-12', content: 'x' }), /not curator-owned/);
 });
 
 test('writeNote creates the target dir when missing', () => {
@@ -273,7 +302,7 @@ test('mcp server: initialize, tools/list, tools/call over stdio', async () => {
   assert.equal(responses[2].id, 3);
   assert.equal(responses[2].result.isError, undefined);
   const payload = JSON.parse(responses[2].result.content[0].text);
-  assert.deepEqual(payload.results.map((r) => r.name).sort(), ['C-12-payment-flow', 'adr-001-use-jwt', 'api-auth', 'jwt-tokens']);
+  assert.deepEqual(payload.results.map((r) => r.name).sort(), ['EP-12', 'adr-001-use-jwt', 'api-auth', 'jwt-tokens']);
 });
 
 test('mcp server: unknown tool is a tool error, unknown method a -32601', async () => {
@@ -294,7 +323,7 @@ test('listTags aggregates frontmatter tags vault-wide sorted by count', () => {
     { tag: 'api', count: 3, notes: ['api-auth', 'jwt-tokens', 'adr-001-use-jwt'] },
     { tag: 'auth', count: 1, notes: ['api-auth'] },
     { tag: 'estimation', count: 1, notes: ['loose-note'] },
-    { tag: 'payments', count: 1, notes: ['C-12-payment-flow'] },
+    { tag: 'payments', count: 1, notes: ['EP-12'] },
   ]);
 });
 
@@ -327,7 +356,7 @@ test('listChangedNotes lifecycle: baseline, hand-edits, acknowledge', () => {
   fs.rmSync(path.join(brain, 'loose-note.md'));
   fs.utimesSync(path.join(vault, 'decisions', 'adr-001-use-jwt.md'), future, future);
   // Workflow notes are not tracked: editing the epic must not show up.
-  fs.utimesSync(path.join(vault, 'epics', 'C-12-payment-flow.md'), future, future);
+  fs.utimesSync(path.join(vault, 'epics', 'EP-12.md'), future, future);
 
   const dirty = listChangedNotes(vault, {});
   const byName = Object.fromEntries(dirty.changed.map((c) => [c.name, c.status]));
