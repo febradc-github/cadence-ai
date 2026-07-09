@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.16.0 — 2026-07-10
+
+- New `/cadence:brain-init`: bulk-bootstraps code-level documentation. Every
+  source file (git ls-files, source-extension allowlist) gets a
+  `cadence/code/<path-slug>.md` note -- purpose, exports, imports, callers --
+  written by parallel brain-curator dispatches (model overridden to sonnet;
+  grep-verified connections, no parser; at most 4 in flight). Reruns are
+  additive: documented files are skipped, notes for deleted files are removed
+  after a single named-list confirmation. A final stitch pass links each
+  directory's file notes into `AR-<dir>` architecture notes and cleans
+  backlinks to removed notes.
+- brain-curator gains the code-file branch and now also keeps `code/` notes
+  current opportunistically: work and systematic-debugger include touched
+  files in their existing curator dispatch. Still four agents.
+- `code/` is the fourth curator-owned knowledge folder: `write_note
+  folder: code`, hand-edit tracking, and the remind alert extend to it.
+- Link safety: file-note links always target the path slug
+  (`[[scripts-brain-mcp-js|scripts/brain-mcp.js]]`); aliases carry the full
+  relative path only. Paths inside link targets and basename aliases are
+  click-traps that mint stray notes.
+
 ## 0.15.0 — 2026-07-08
 
 - Version bump only; no functional changes since 0.14.0.
