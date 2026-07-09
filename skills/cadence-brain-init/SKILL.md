@@ -47,7 +47,7 @@ into per-directory architecture notes.
 5. Plan the batches: group by top-level directory, about 15 files per
    batch (split large directories, merge tiny ones).
 6. Report the plan -- N files to document in M batches, K skipped as
-   already documented, S stale notes to remove -- and confirm once with
+   already documented, S stale notes to remove, each stale note named -- and confirm once with
    the user (AskUserQuestion). After confirmation: delete the stale note
    files, then dispatch the brain-curator agent once per batch with
    model: sonnet, at most 4 dispatches in flight at a time. Each dispatch

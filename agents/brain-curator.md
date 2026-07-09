@@ -134,7 +134,8 @@ actually text, skip it and report it. Per file, in order:
    caller only when the hit is a real import/require/include or a use of the
    exported name -- not a comment or a coincidental substring. Never assert
    an unverified connection.
-4. Write the note. In-repo connections whose target is on the linkable-slugs
+4. Write the note under the slug supplied in the prompt -- never re-derive it.
+   In-repo connections whose target is on the linkable-slugs
    list become [[slug|path]] links; everything else stays plain text.
 5. Add those slugs (and the module's AR note if the prompt names one) to the
    note's `related` list.
