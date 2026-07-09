@@ -101,7 +101,7 @@ instead of requiring each command to be typed by hand.
 Cadence reads and writes a `cadence/` folder in your project repo. The whole
 folder is an Obsidian vault; every markdown file in it follows one shared
 note format (frontmatter + wikilinks), so items, designs, specs, decisions,
-architecture, and brain notes all interconnect in Graph View:
+architecture, code, and brain notes all interconnect in Graph View:
 
     cadence/
       backlog.yml                       # unplanned work: idea -> ready (or dropped)
