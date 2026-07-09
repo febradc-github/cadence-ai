@@ -67,7 +67,7 @@ session; nothing else is agent-shaped.
 |---|---|---|
 | `cadence-coder` | inherit | Language-adaptive implementation of one ticket or confirmed bug fix, test-first, matching the repo's existing conventions. Dispatched by `/cadence:work` (self-contained tickets) and `/cadence:systematic-debugger` (non-trivial fixes). Never commits, never touches `cadence/` data files. |
 | `cadence-reviewer` | opus | Independent done-ness verdict for `/cadence:review`; judges only the criteria and the diff, read-only. |
-| `brain-curator` | haiku | Sole writer of the knowledge folders (`cadence/brain/`, `cadence/decisions/`, `cadence/architecture/`); dispatched opportunistically when something worth remembering happens. |
+| `brain-curator` | haiku | Sole writer of the knowledge folders (`cadence/brain/`, `cadence/decisions/`, `cadence/architecture/`, `cadence/code/`); dispatched opportunistically when something worth remembering happens. |
 | `pitch-agent` | inherit | Anchoring-free idea pitches for `/cadence:brainstorm`'s panel: dispatched 2-3× in parallel with forced stances (minimalist, skeptic, scout) on epic-scale ideas or on request. Sees the idea summary, never the dialogue. Read-only. |
 
 ## Workflow
@@ -168,18 +168,18 @@ the vault as structured tools: `search_notes`, `read_note`, `write_note`,
 `list_backlinks`, `get_related`, `list_orphans`, `list_unresolved_links`,
 `list_stray_notes`, `list_tags`, `list_changed_notes`.
 It indexes every markdown note under `<project>/cadence/` per call (item
-notes, designs, specs, decisions, architecture, brain), so results always
-reflect the files on disk. Lookups accept aliases (asking for `C-12` finds
-`EP-12`), while link-resolution checks (`list_unresolved_links`,
+notes, designs, specs, decisions, architecture, brain, code), so results
+always reflect the files on disk. Lookups accept aliases (asking for `C-12`
+finds `EP-12`), while link-resolution checks (`list_unresolved_links`,
 `list_stray_notes`) deliberately match Obsidian's real behavior: exact
 filenames only.
 `write_note` targets the knowledge folders only (`brain/` by default, or
-`folder: decisions` / `folder: architecture`). Registered via `.mcp.json`;
-agents without a `tools:` restriction (like `brain-curator`) can use these
-automatically.
+`folder: decisions` / `folder: architecture` / `folder: code`). Registered
+via `.mcp.json`; agents without a `tools:` restriction (like
+`brain-curator`) can use these automatically.
 
 The knowledge folders are two-way aware: `list_changed_notes` diffs `brain/`,
-`decisions/`, and `architecture/` against the baseline in
+`decisions/`, `architecture/`, and `code/` against the baseline in
 `cadence/.brain-state.json`, so notes hand-edited in Obsidian are detected,
 flagged by the every-turn reminder, and reconciled by the brain-curator
 (hand-edits are ground truth, never clobbered). Workflow notes written by the
