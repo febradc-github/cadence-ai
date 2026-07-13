@@ -21,6 +21,7 @@ user-invocable: false
 - Never read env files. Not .env, not .env.local, not prod.env, not .envrc -- no tool, no shell command, no exceptions, in any skill or agent. They hold secrets. The guard hook blocks access mechanically; never work around it. Need a config value? Ask the user.
 - Malformed YAML in any cadence/*.yml file: surface the parse error and ask the user to fix it by hand. Never guess or auto-repair.
 - If a requirement, acceptance criterion, or user request is ambiguous, ask before proceeding. Do not guess.
+- Keep chat replies lean: lead with the answer or verdict, include only what changes the user's next action, and never quote file contents, board tables, or these rules back unless asked. After rendering a table (board, standup), do not recap it in prose.
 </important>
 
 ## Purpose

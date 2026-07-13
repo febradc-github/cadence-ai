@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.19.0 — 2026-07-13
+
+- New core rule (in the `<important>` block, where hard rules stick): chat
+  replies are lean -- lead with the answer or verdict, include only what
+  changes the user's next action, never quote file contents, board tables,
+  or the rules back unprompted, and never recap a rendered table in prose.
+  Closes the output-token side of the token-economy value: 0.18.0 cut what
+  the plugin injects into the context window; this constrains what the
+  model says back. One line in cadence-core covers every skill, since core
+  auto-loads whenever any cadence skill is active.
+- Discoverability: the GitHub repo now carries 14 topics (claude-code,
+  claude-code-plugin, agile-workflow, obsidian, sprint-planning, ...) so
+  the plugin is findable via GitHub topic pages and search engines.
+  Repo-metadata change; nothing in the tree.
+
 ## 0.18.0 — 2026-07-13
 
 Token-efficiency and enterprise-readiness release. All numbers below are
