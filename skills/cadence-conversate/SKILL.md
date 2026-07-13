@@ -9,6 +9,7 @@ user-invocable: false
 
 <important>
 - Always invoke the matched skill directly via the Skill tool rather than merely telling the user which command to run. The invoked skill's own internal approval gates (explicit design-doc approval in refine, explicit spec approval in spec, sprint-goal requirement in sprint-plan, etc.) are the actual safety mechanism -- conversate's job is routing, not gating.
+- For any question about what code does or how something is implemented: check `cadence/code/` first (`search_notes`/`read_note`) -- do not reach for Grep/Read as the first move. A matching note exists more often than not once `/cadence:brain-init` has run; skipping straight to Grep throws that away. See the matching case below for the full read-note-then-verify-source procedure.
 - Never perform a gated skill's effects yourself inline (e.g. never write a design doc or item note directly, and never edit a `cadence/code/` note directly -- only brain-curator writes notes). Only ever: (a) answer a read-only question directly -- which may include dispatching brain-curator to correct a drifted code note you found while answering -- or (b) invoke exactly one matching skill.
 - If genuinely ambiguous, ask one clarifying question instead of guessing which skill to invoke.
 </important>

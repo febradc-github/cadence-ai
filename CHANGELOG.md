@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.17.1 — 2026-07-13
+
+- Fix: `cadence-conversate` was not reliably checking `cadence/code/` before
+  answering ad-hoc code questions -- verified live in a brand-new session
+  with 0.17.0 installed, the note-then-verify-source procedure was skipped
+  entirely in favor of Grep/Read. Root cause: the rule lived only as prose
+  inside a 10-item case list, competing with a strong default habit. Fix:
+  promoted a short, imperative version of the rule into the `<important>`
+  block at the top of the skill (the pattern that already makes the other
+  conversate gating rules and `cadence-brain`'s own "check the brain first"
+  mandate stick); the detailed procedure stays in the case list unchanged.
+
 ## 0.17.0 — 2026-07-13
 
 - `cadence-conversate` now checks `cadence/code/` before answering an ad-hoc
