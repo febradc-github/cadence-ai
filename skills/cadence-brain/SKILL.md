@@ -1,6 +1,6 @@
 ---
 name: cadence-brain
-description: The cadence vault layout, the one note format every cadence markdown file follows, and the "check the brain first" mandate. Auto-loads whenever a cadence skill is about to start new work (refine, breakdown, work, sprint-plan, standup, brainstorm, systematic-debugger, code-reviewer) or /cadence:review is about to commit.
+description: Vault layout, the shared note format, and the check-the-brain-first mandate. Auto-loads whenever any cadence skill starts new work or /cadence:review is about to commit.
 user-invocable: false
 ---
 
@@ -17,13 +17,6 @@ user-invocable: false
 - If the every-turn reminder or list_changed_notes reports hand-edited knowledge notes, surface them before relying on their content -- the user's edits in Obsidian are ground truth.
 - Every commit made by /cadence:review follows the message convention below and never includes an Anthropic or Claude co-author tag.
 </important>
-
-## Purpose
-
-Defines the vault layout and where the shared note format lives, so every
-cadence artifact stays a node in the Obsidian graph. The full note format is
-reference material in `references/note-format.md`, read on demand when a note
-is about to be written.
 
 ## Vault layout
 
@@ -57,7 +50,4 @@ Format: `<verb>: <ticket title> (<id>)`, e.g. `feat: add password reset endpoint
 
 Never include a `Co-Authored-By: Claude` or any Anthropic attribution line. Never use `--no-verify`. The plugin's PreToolUse guard hook blocks commits that violate either rule -- if a commit is rejected, fix the message or the failing check, never work around the hook.
 
-## Error handling
-
-- **Vault search finds nothing relevant:** proceed normally, note that no prior context was found.
-- **Vault search finds a conflicting note:** surface it to the user explicitly before proceeding.
+A vault search that finds nothing relevant is fine -- proceed and say no prior context was found.

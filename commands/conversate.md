@@ -1,5 +1,6 @@
 ---
-description: Casual entry point for cadence. Classifies what the user wants and directly invokes the matching skill -- brainstorm, refine/spec/sprint-plan/work/review at the right gate, systematic-debugger, or code-reviewer. Use when the user asks about cadence work in natural language rather than a specific /cadence command.
+disable-model-invocation: true
+description: Natural-language entry point -- answers from the board or routes the request to the matching cadence skill.
 argument-hint: "[what you want]"
 ---
 

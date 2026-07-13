@@ -1,6 +1,6 @@
 ---
 name: cadence-install-obsidian
-description: Detects whether Obsidian is installed, installs it via the OS package manager after explicit confirmation, and scaffolds cadence/.obsidian/ so the brain opens as a working vault. Only invoke when dispatched by the /cadence:install-obsidian command.
+description: Installs Obsidian (after explicit confirmation) and scaffolds cadence/.obsidian/ so the vault opens. Dispatched by /cadence:install-obsidian only.
 user-invocable: false
 ---
 

@@ -1,5 +1,6 @@
 ---
-description: Read-only render of the current backlog and active sprint state. Use to see the whole board at a glance.
+disable-model-invocation: true
+description: Read-only render of the backlog and active sprint.
 ---
 
 Use the Skill tool to invoke the `cadence-board` skill.

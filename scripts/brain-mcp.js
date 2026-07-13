@@ -409,12 +409,12 @@ const TOOLS = [
   {
     name: 'search_notes',
     description:
-      'Search every markdown note in the cadence/ vault by name, alias, tag, and content (case-insensitive substring). Returns up to `limit` notes (default 20) with up to 5 matching lines each, plus total/truncated when capped. Use before starting new work.',
+      'Search every cadence/ vault note by name, alias, tag, and content (case-insensitive substring). Returns up to `limit` notes (default 20) with matching lines.',
     inputSchema: {
       type: 'object',
       properties: {
-        query: { type: 'string', description: 'Substring to search for' },
-        limit: { type: 'integer', description: 'Max notes to return (default 20, max 100)' },
+        query: { type: 'string', description: 'Substring' },
+        limit: { type: 'integer', description: 'Max notes (default 20, max 100)' },
       },
       required: ['query'],
     },
@@ -423,19 +423,19 @@ const TOOLS = [
   {
     name: 'read_note',
     description:
-      'Read one vault note by name or alias (case-insensitive, no .md extension). C-12 reads that ticket\'s item note via its alias.',
-    inputSchema: { type: 'object', properties: { name: { type: 'string', description: 'Note name or alias without extension' } }, required: ['name'] },
+      'Read one vault note by name or alias (case-insensitive, no .md extension); board ids resolve via alias.',
+    inputSchema: { type: 'object', properties: { name: { type: 'string', description: 'Name or alias, no extension' } }, required: ['name'] },
     handler: readNote,
   },
   {
     name: 'write_note',
     description:
-      'Create or overwrite a knowledge note in brain/ (default), decisions/, architecture/, or code/, using the cadence-brain note format. Replaces the whole file — read an existing note first; an existing note stays in its own folder regardless of the folder argument. For the brain-curator agent; other note kinds are written by their skills.',
+      'Create or overwrite a knowledge note in brain/ (default), decisions/, architecture/, or code/. Replaces the whole file — read an existing note first; an existing note stays in its own folder. Brain-curator only.',
     inputSchema: {
       type: 'object',
       properties: {
-        name: { type: 'string', description: 'Note name without extension' },
-        content: { type: 'string', description: 'Full markdown content including frontmatter' },
+        name: { type: 'string', description: 'Name, no extension' },
+        content: { type: 'string', description: 'Full markdown incl. frontmatter' },
         folder: { type: 'string', description: 'brain (default), decisions, architecture, or code' },
       },
       required: ['name', 'content'],
@@ -444,15 +444,14 @@ const TOOLS = [
   },
   {
     name: 'list_backlinks',
-    description:
-      'List notes linking to the given name via [[wikilinks]], alias-aware. Works for targets with no note file.',
+    description: 'Notes linking to the given name via [[wikilinks]], alias-aware; works for missing targets.',
     inputSchema: { type: 'object', properties: { name: { type: 'string', description: 'Link target' } }, required: ['name'] },
     handler: listBacklinks,
   },
   {
     name: 'get_related',
     description: 'Neighborhood of one note: outgoing links, backlinks, notes sharing tags.',
-    inputSchema: { type: 'object', properties: { name: { type: 'string', description: 'Note name or alias' } }, required: ['name'] },
+    inputSchema: { type: 'object', properties: { name: { type: 'string', description: 'Name or alias' } }, required: ['name'] },
     handler: getRelated,
   },
   {
@@ -464,32 +463,31 @@ const TOOLS = [
   {
     name: 'list_unresolved_links',
     description:
-      'Every [[link target]] with no note file of that exact name (aliases never resolve a raw link), with referencing notes. Each is a click-trap that mints a stray note.',
+      'Every [[link target]] with no note file of that exact name (aliases never resolve raw links), with referencing notes.',
     inputSchema: { type: 'object', properties: {} },
     handler: listUnresolvedLinks,
   },
   {
     name: 'list_tags',
-    description:
-      'All frontmatter tags with counts, by frequency. Check before tagging a new note (reuse over synonyms) and for the 5-note MOC threshold.',
+    description: 'All frontmatter tags with counts, by frequency. Check before tagging a new note.',
     inputSchema: { type: 'object', properties: {} },
     handler: listTags,
   },
   {
     name: 'list_stray_notes',
     description:
-      'Notes breaking wikilink resolution: vault-root files, duplicate basenames, or files named like another note\'s alias. Delete empty strays; fold non-empty ones into the real note first.',
+      'Notes breaking wikilink resolution: vault-root files, duplicate basenames, or files named like another note\'s alias.',
     inputSchema: { type: 'object', properties: {} },
     handler: listStrayNotes,
   },
   {
     name: 'list_changed_notes',
     description:
-      'Knowledge notes (brain/, decisions/, architecture/, code/) changed outside cadence since the last acknowledged sync. Hand-edits are ground truth — read before overwriting. Pass acknowledge: true after reconciling (first acknowledge creates the baseline).',
+      'Knowledge notes changed outside cadence since the last acknowledged sync (hand-edits are ground truth). Pass acknowledge: true after reconciling; the first acknowledge creates the baseline.',
     inputSchema: {
       type: 'object',
       properties: {
-        acknowledge: { type: 'boolean', description: 'Snapshot current state as the new baseline' },
+        acknowledge: { type: 'boolean', description: 'Snapshot current state as baseline' },
       },
     },
     handler: listChangedNotes,

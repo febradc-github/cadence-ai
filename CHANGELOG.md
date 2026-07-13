@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.20.0 — 2026-07-13
+
+Progressive-disclosure release: the plugin now loads in three layers —
+always-on metadata, on-invoke skill bodies, and on-demand `references/`
+files read only at the step that needs them. All numbers measured with
+`scripts/token-report.js` against the 0.19.0 tree (30-turn reference
+session).
+
+- Every counted frontmatter description rewritten as a lean capability
+  statement (6,735 -> 3,870 chars) and the three model-visible wrapper
+  commands (board, standup, conversate) marked
+  `disable-model-invocation: true` — their skills carry the routing
+  descriptions, so the commands now cost the / menu only. MCP tool and
+  schema descriptions trimmed to one sentence each. Always-on overhead:
+  10,106 -> 6,479 chars (−35.9%).
+- Templates, format blocks, and mode detail moved out of skill/agent
+  bodies into references loaded on demand: refine and breakdown design/
+  item-note/backlog templates, the sprint file template, the quick item
+  note, the spec template, and brain-curator's code-note format + bulk
+  mode (now `skills/cadence-brain/references/curator-code-notes.md`,
+  loaded via `${CLAUDE_PLUGIN_ROOT}` only when a code note is written).
+  Reference-workflow invoked bodies: 42,848 -> 30,255 chars (−29.4%);
+  per-invoke bodies of the write-heavy skills drop 45–55% (e.g. refine
+  9,421 -> ~4,600).
+- Boilerplate Purpose/Inputs/Outputs sections and duplicated error-handling
+  prose removed across skills; every rule in an `<important>` block kept
+  verbatim or tightened in place, never moved to a reference.
+- Net effect: total plugin-emitted context 56,737 -> 40,517 chars
+  (−28.6%, ~4,000 tokens saved per session) and 30-turn cumulative context
+  −29.4%, on top of 0.18.0's 27–47% cut. All 121 tests pass; no behavior
+  change intended anywhere — every gate, refusal, and dispatch rule
+  survives in the lean layer.
+
 ## 0.19.0 — 2026-07-13
 
 - New core rule (in the `<important>` block, where hard rules stick): chat

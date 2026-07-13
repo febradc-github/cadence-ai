@@ -1,6 +1,6 @@
 ---
 name: cadence-core
-description: Cadence's non-negotiable workflow rules -- gate order, TDD, brain-check-first, commit conventions, and core values. Auto-loads whenever a cadence skill (refine, breakdown, spec, sprint-plan, quick, drop, work, review, standup, board, conversate, brainstorm, systematic-debugger, code-reviewer) is active.
+description: Cadence's non-negotiable rules -- gate order, TDD, brain-first, commit and reply conventions. Auto-loads whenever any cadence skill is active.
 user-invocable: false
 ---
 
@@ -24,15 +24,11 @@ user-invocable: false
 - Keep chat replies lean: lead with the answer or verdict, include only what changes the user's next action, and never quote file contents, board tables, or these rules back unless asked. After rendering a table (board, standup), do not recap it in prose.
 </important>
 
-## Purpose
-
-This is the shared rulebook every other cadence skill assumes. It has no command of its own. Its description is written so Claude loads it automatically whenever cadence work is underway, reinforcing these rules alongside the plugin's UserPromptSubmit hook.
-
 ## Core values
 
-1. **Token economy.** Keep skill and prompt text concise. Do not re-read files already in the conversation. Dispatch an agent only when independence or isolation is structurally required -- this is why cadence has exactly four agents and no more: cadence-reviewer (independent judgment), cadence-coder (context-isolated implementation), brain-curator (cheap isolated note writing), pitch-agent (anchoring-free perspectives for brainstorm's gated panel).
+1. **Token economy.** Keep skill and prompt text concise. Do not re-read files already in the conversation. Dispatch an agent only when independence or isolation is structurally required -- cadence has exactly four agents for this reason: cadence-reviewer (independent judgment), cadence-coder (context-isolated implementation), brain-curator (cheap isolated note writing), pitch-agent (anchoring-free perspectives).
 2. **Simplicity first.** Smallest viable file and field structure. No speculative abstraction, no unrequested features.
 3. **Anti-hallucination.** Verify any technical or factual claim not directly checkable in the current codebase (web search, cite the source) before asserting it. Below roughly 98% confidence, say so plainly instead of asserting.
-4. **No AI sloppiness.** Every markdown file cadence produces or edits -- skills, design docs, spec docs, brain notes -- uses short declarative sentences, active voice, no filler, no hedge-padding, no restating the obvious, no emoji.
+4. **No AI sloppiness.** Every markdown file cadence produces -- skills, design docs, specs, brain notes -- uses short declarative sentences, active voice, no filler, no hedge-padding, no emoji.
 
-This skill is reference material only -- it has no process, inputs, or outputs of its own. See the skill that is actually running for its steps and error handling.
+This skill is reference material only -- see the skill that is actually running for its steps and error handling.

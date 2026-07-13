@@ -1,6 +1,6 @@
 ---
 name: cadence-coder
-description: Implements one well-scoped piece of work -- a ticket's acceptance criteria or a confirmed bug fix -- in whatever language the repo uses, following its existing conventions and TDD. Dispatched by cadence-work or cadence-systematic-debugger -- never invoke this directly.
+description: Implements one scoped piece of work test-first, matching the repo's conventions. Dispatched by cadence-work or cadence-systematic-debugger -- never invoke directly.
 model: inherit
 effort: high
 ---

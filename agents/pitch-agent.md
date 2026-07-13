@@ -1,6 +1,6 @@
 ---
 name: pitch-agent
-description: Independent idea pitcher for cadence-brainstorm's panel. Dispatched 2-3 times in parallel with different stances when an idea is epic-scale or the user asks for perspectives -- never invoke this directly.
+description: Pitches one assigned stance on an idea for cadence-brainstorm's panel, dispatched 2-3 in parallel -- never invoke directly.
 model: inherit
 disallowedTools: Write, Edit
 ---

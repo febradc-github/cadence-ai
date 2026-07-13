@@ -1,6 +1,6 @@
 ---
 name: cadence-code-reviewer
-description: General, advisory, non-gated review of code or a diff for correctness bugs and reuse/simplification opportunities. Never commits and never touches ticket status -- distinct from the /cadence:review ticket-closing gate. Only invoke when dispatched by the /cadence:code-reviewer command or cadence-conversate routing.
+description: Advisory, non-gated review of code or a diff for bugs and simplification; never commits or touches ticket status. Dispatched by /cadence:code-reviewer or conversate routing only.
 argument-hint: "[optional: files or scope to review]"
 user-invocable: false
 ---
@@ -9,33 +9,14 @@ user-invocable: false
 
 <important>
 - Never commit, never change a ticket's `status`, and never edit `cadence/backlog.yml` or any sprint file from this skill. It only reports findings.
-- This is not the ticket done-ness gate. If the user is asking whether a ticket is actually done and ready to ship, point them at `/cadence:review <id>` instead. Unrelated to the `cadence-reviewer` agent, which `/cadence:review` dispatches internally to verify ticket done-ness -- that agent is never invoked directly, and this skill never invokes it either.
+- This is not the ticket done-ness gate. If the user is asking whether a ticket is done and ready to ship, point them at `/cadence:review <id>` instead. Unrelated to the `cadence-reviewer` agent (which /cadence:review dispatches internally) -- this skill never invokes it.
 - Search the vault (brain, decisions, architecture) for related notes before reviewing -- prior gotchas and recorded decisions in this area change what to look for.
 </important>
 
-## Purpose
-
-Reviews code or a diff for correctness bugs and reuse/simplification opportunities ($ARGUMENTS, or the current uncommitted changes by default), and reports findings -- with no side effects on the ticket workflow.
-
 ## Process
 
-1. Determine the review target: if `$ARGUMENTS` names specific files or a scope, use that; otherwise default to `git diff` / `git status` for the current uncommitted changes.
-2. Search the vault for notes related to the affected area (the search_notes MCP tool indexes all of cadence/). Surface anything relevant -- known gotchas, and any `decisions/adr-*.md` the change might contradict -- before reviewing.
-3. Review the target for:
-   - Correctness bugs: logic errors, edge cases, incorrect assumptions.
-   - Reuse and simplification: duplicated logic, unnecessary complexity, existing utilities that should be used instead.
-4. Report findings as a list, each with the file/location, what's wrong, and why it matters. If nothing significant is found, say so plainly rather than inventing minor nitpicks.
-5. If a finding reveals a durable gotcha worth remembering (not just a one-off bug), dispatch the `brain-curator` agent with a short description of it.
-
-## Inputs
-
-The vault's markdown notes, the codebase, `git diff`/`git status` (default target).
-
-## Outputs
-
-None to cadence data files -- a findings report only, plus an optional `brain-curator` dispatch.
-
-## Error handling
-
-- **No uncommitted changes and no target specified:** tell the user there's nothing to review; ask what they'd like reviewed.
-- **Target files don't exist:** tell the user and ask for the correct path.
+1. Determine the review target: files or scope from `$ARGUMENTS`, else `git diff` / `git status` for the current uncommitted changes. Nothing to review (no changes, no target): say so and ask what they'd like reviewed.
+2. Search the vault for notes on the affected area. Surface anything relevant -- known gotchas, and any ADR the change might contradict -- before reviewing.
+3. Review for: correctness bugs (logic errors, edge cases, incorrect assumptions) and reuse/simplification (duplicated logic, unnecessary complexity, existing utilities that should be used).
+4. Report findings as a list -- file/location, what's wrong, why it matters. Nothing significant: say so plainly rather than inventing nitpicks.
+5. If a finding reveals a durable gotcha worth remembering (not a one-off bug), dispatch `brain-curator` with a short description.

@@ -1,6 +1,6 @@
 ---
 name: cadence-obsidian-graph
-description: Opens the project's cadence/ folder in Obsidian and points the user at Graph View. Only invoke when dispatched by the /cadence:obsidian-graph command.
+description: Opens cadence/ in Obsidian and points the user at Graph View. Dispatched by /cadence:obsidian-graph only.
 user-invocable: false
 ---
 

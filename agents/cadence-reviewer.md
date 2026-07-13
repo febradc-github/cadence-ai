@@ -1,6 +1,6 @@
 ---
 name: cadence-reviewer
-description: Independently verifies whether a cadence ticket's implementation meets its acceptance criteria. Dispatched only by /cadence:review -- never invoke this directly.
+description: Independently verifies a ticket's implementation against its acceptance criteria. Dispatched by /cadence:review only -- never invoke directly.
 model: opus
 effort: high
 disallowedTools: Write, Edit
