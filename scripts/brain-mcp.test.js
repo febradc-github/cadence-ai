@@ -454,3 +454,80 @@ test('code notes are indexed by search and backlinks', () => {
     'scripts-open-obsidian-js',
   ]);
 });
+
+// --- 0.18.0: vaultAlerts, search_notes limit, version sync ---
+
+test('vaultAlerts returns strays, unresolved links, and changed notes from one vault load', () => {
+  const { vaultAlerts } = require('./brain-mcp.js');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
+  const vault = path.join(root, 'cadence');
+  const brain = path.join(vault, 'brain');
+  fs.mkdirSync(brain, { recursive: true });
+  fs.writeFileSync(path.join(brain, 'known.md'), '# Known\n\nSee [[missing-target]].\n');
+  listChangedNotes(vault, { acknowledge: true });
+  fs.writeFileSync(path.join(brain, 'hand-made.md'), '# Hand made\n');
+  fs.writeFileSync(path.join(vault, 'stray.md'), '');
+  const alerts = vaultAlerts(vault);
+  assert.equal(alerts.strays.length, 1);
+  assert.ok(alerts.strays.some((s) => s.name === 'stray'));
+  assert.ok(alerts.unresolved.some((u) => u.target === 'missing-target'));
+  assert.ok(alerts.changed.some((c) => c.name === 'brain/hand-made'));
+});
+
+test('vaultAlerts matches the individual tools output', () => {
+  const { vaultAlerts } = require('./brain-mcp.js');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
+  const vault = path.join(root, 'cadence');
+  const brain = path.join(vault, 'brain');
+  fs.mkdirSync(brain, { recursive: true });
+  fs.writeFileSync(path.join(brain, 'a.md'), 'See [[nowhere]].\n');
+  fs.writeFileSync(path.join(vault, 'root-stray.md'), 'content\n');
+  const alerts = vaultAlerts(vault);
+  assert.deepEqual(alerts.strays, listStrayNotes(vault).strays);
+  assert.deepEqual(alerts.unresolved, listUnresolvedLinks(vault).unresolved);
+});
+
+test('vaultAlerts returns null when no vault exists', () => {
+  const { vaultAlerts } = require('./brain-mcp.js');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
+  assert.equal(vaultAlerts(path.join(root, 'cadence')), null);
+});
+
+test('search_notes caps results at 20 by default and reports truncation', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
+  const vault = path.join(root, 'cadence');
+  const brain = path.join(vault, 'brain');
+  fs.mkdirSync(brain, { recursive: true });
+  for (let i = 0; i < 25; i++) {
+    fs.writeFileSync(path.join(brain, `note-${i}.md`), `# Note ${i}\n\ncommon-term appears here.\n`);
+  }
+  const res = searchNotes(vault, { query: 'common-term' });
+  assert.equal(res.results.length, 20);
+  assert.equal(res.truncated, true);
+  assert.equal(res.total, 25);
+});
+
+test('search_notes respects an explicit limit and omits truncation fields when complete', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
+  const vault = path.join(root, 'cadence');
+  const brain = path.join(vault, 'brain');
+  fs.mkdirSync(brain, { recursive: true });
+  for (let i = 0; i < 5; i++) {
+    fs.writeFileSync(path.join(brain, `note-${i}.md`), `# Note ${i}\n\ncommon-term.\n`);
+  }
+  const capped = searchNotes(vault, { query: 'common-term', limit: 3 });
+  assert.equal(capped.results.length, 3);
+  assert.equal(capped.total, 5);
+  const complete = searchNotes(vault, { query: 'common-term' });
+  assert.equal(complete.results.length, 5);
+  assert.equal(complete.truncated, undefined);
+});
+
+test('server version tracks plugin.json', () => {
+  const { handleMessage } = require('./brain-mcp.js');
+  const pluginVersion = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', '.claude-plugin', 'plugin.json'), 'utf8')
+  ).version;
+  const res = handleMessage({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }, '/nonexistent');
+  assert.equal(res.result.serverInfo.version, pluginVersion);
+});

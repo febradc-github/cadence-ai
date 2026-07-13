@@ -128,6 +128,8 @@ function backlinksFor(notes, name) {
 function searchNotes(dir, args) {
   const query = String((args && args.query) || '').toLowerCase();
   if (!query) throw new Error('query is required');
+  const rawLimit = args && args.limit;
+  const limit = Number.isInteger(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 20;
   const notes = loadBrain(dir);
   if (notes === null) return { results: [], note: 'no cadence/ directory in this project' };
   const results = [];
@@ -145,7 +147,10 @@ function searchNotes(dir, args) {
       results.push({ name: note.name, folder: note.folder, tags: note.tags, matches });
     }
   }
-  return { results };
+  if (results.length > limit) {
+    return { results: results.slice(0, limit), total: results.length, truncated: true };
+  }
+  return { results, total: results.length };
 }
 
 function readNote(dir, args) {
@@ -244,6 +249,10 @@ function listOrphans(dir) {
 function listUnresolvedLinks(dir) {
   const notes = loadBrain(dir);
   if (notes === null) return { unresolved: [], note: 'no cadence/ directory in this project' };
+  return { unresolved: unresolvedFrom(notes) };
+}
+
+function unresolvedFrom(notes) {
   const byTarget = new Map();
   for (const note of notes) {
     for (const link of note.links) {
@@ -254,7 +263,7 @@ function listUnresolvedLinks(dir) {
       if (!entry.sources.includes(note.name)) entry.sources.push(note.name);
     }
   }
-  return { unresolved: [...byTarget.values()] };
+  return [...byTarget.values()];
 }
 
 function stateFilePath(dir) {
@@ -339,6 +348,10 @@ function listChangedNotes(dir, args) {
 function listStrayNotes(dir) {
   const notes = loadBrain(dir);
   if (notes === null) return { strays: [], note: 'no cadence/ directory in this project' };
+  return { strays: straysFrom(notes) };
+}
+
+function straysFrom(notes) {
   const strays = [];
   for (const note of notes) {
     const reasons = [];
@@ -360,7 +373,19 @@ function listStrayNotes(dir) {
       });
     }
   }
-  return { strays };
+  return strays;
+}
+
+// One vault load for everything the every-prompt reminder needs: strays,
+// unresolved links, and the hand-edit diff. Returns null when no vault exists.
+function vaultAlerts(dir) {
+  const notes = loadBrain(dir);
+  if (notes === null) return null;
+  let changed = [];
+  const current = snapshotBrain(dir);
+  const state = current && readState(dir);
+  if (current && state) changed = diffBrainState(current, state.notes);
+  return { strays: straysFrom(notes), unresolved: unresolvedFrom(notes), changed };
 }
 
 function listTags(dir) {
@@ -384,27 +409,34 @@ const TOOLS = [
   {
     name: 'search_notes',
     description:
-      'Search every markdown note in the cadence/ vault (brain, decisions, architecture, code, epics, user-stories, tasks, designs, specs) by name, alias, tag, and content (case-insensitive substring). Returns matching notes with folder and up to 5 matching lines each. Use this before starting new work to find prior knowledge.',
-    inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Substring to search for' } }, required: ['query'] },
+      'Search every markdown note in the cadence/ vault by name, alias, tag, and content (case-insensitive substring). Returns up to `limit` notes (default 20) with up to 5 matching lines each, plus total/truncated when capped. Use before starting new work.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Substring to search for' },
+        limit: { type: 'integer', description: 'Max notes to return (default 20, max 100)' },
+      },
+      required: ['query'],
+    },
     handler: searchNotes,
   },
   {
     name: 'read_note',
     description:
-      'Read the full raw content of one vault note by name or alias (case-insensitive, no .md extension). Item notes are named by ticket id, so C-12 reads the item note directly.',
+      'Read one vault note by name or alias (case-insensitive, no .md extension). C-12 reads that ticket\'s item note via its alias.',
     inputSchema: { type: 'object', properties: { name: { type: 'string', description: 'Note name or alias without extension' } }, required: ['name'] },
     handler: readNote,
   },
   {
     name: 'write_note',
     description:
-      'Create or overwrite a knowledge note in brain/ (default), decisions/, architecture/, or code/. Follow the cadence-brain note format (frontmatter with type/tags/aliases/created/updated/related/sources, then a # Title). Read the existing note first when overwriting — this replaces the whole file, and an existing note is overwritten in its own folder regardless of the folder argument. Intended for the brain-curator agent; item notes, designs, and specs are written by their skills, not this tool.',
+      'Create or overwrite a knowledge note in brain/ (default), decisions/, architecture/, or code/, using the cadence-brain note format. Replaces the whole file — read an existing note first; an existing note stays in its own folder regardless of the folder argument. For the brain-curator agent; other note kinds are written by their skills.',
     inputSchema: {
       type: 'object',
       properties: {
         name: { type: 'string', description: 'Note name without extension' },
         content: { type: 'string', description: 'Full markdown content including frontmatter' },
-        folder: { type: 'string', description: 'Target folder for a new note: brain (default), decisions, architecture, or code' },
+        folder: { type: 'string', description: 'brain (default), decisions, architecture, or code' },
       },
       required: ['name', 'content'],
     },
@@ -413,58 +445,66 @@ const TOOLS = [
   {
     name: 'list_backlinks',
     description:
-      'List notes anywhere in the vault that link to the given name via [[wikilinks]], resolving aliases (asking for C-12 also finds links to the item note carrying that alias). Works for targets with no note file too.',
+      'List notes linking to the given name via [[wikilinks]], alias-aware. Works for targets with no note file.',
     inputSchema: { type: 'object', properties: { name: { type: 'string', description: 'Link target' } }, required: ['name'] },
     handler: listBacklinks,
   },
   {
     name: 'get_related',
-    description: 'Full neighborhood of one vault note: outgoing links, backlinks, and notes sharing tags.',
+    description: 'Neighborhood of one note: outgoing links, backlinks, notes sharing tags.',
     inputSchema: { type: 'object', properties: { name: { type: 'string', description: 'Note name or alias' } }, required: ['name'] },
     handler: getRelated,
   },
   {
     name: 'list_orphans',
-    description: 'List vault notes with no resolved outgoing links and no backlinks — candidates for linking into the graph.',
+    description: 'Notes with no resolved outgoing links and no backlinks.',
     inputSchema: { type: 'object', properties: {} },
     handler: listOrphans,
   },
   {
     name: 'list_unresolved_links',
     description:
-      'List every [[link target]] with no note file of that exact name, with the notes referencing it. Matches Obsidian\'s real resolution: aliases do NOT resolve a raw [[link]], so an alias-only match still counts as unresolved. Every entry is a click-trap that would mint a stray note.',
+      'Every [[link target]] with no note file of that exact name (aliases never resolve a raw link), with referencing notes. Each is a click-trap that mints a stray note.',
     inputSchema: { type: 'object', properties: {} },
     handler: listUnresolvedLinks,
   },
   {
     name: 'list_tags',
     description:
-      'Aggregate all frontmatter tags across the vault with note counts, sorted by frequency. Use before tagging a new note (reuse or nest under an existing tag instead of inventing a synonym) and to decide when a topic has enough notes (5+) to deserve a MOC.',
+      'All frontmatter tags with counts, by frequency. Check before tagging a new note (reuse over synonyms) and for the 5-note MOC threshold.',
     inputSchema: { type: 'object', properties: {} },
     handler: listTags,
   },
   {
     name: 'list_stray_notes',
     description:
-      'List stray/conflicting notes that break wikilink resolution: files at the vault root (cadence never writes one), duplicate basenames anywhere in the vault (ambiguous [[links]]), or files named exactly like another note\'s alias. Delete empty strays; fold a non-empty stray\'s content into the real note (or migrate a legacy-named file to its current convention) before deleting.',
+      'Notes breaking wikilink resolution: vault-root files, duplicate basenames, or files named like another note\'s alias. Delete empty strays; fold non-empty ones into the real note first.',
     inputSchema: { type: 'object', properties: {} },
     handler: listStrayNotes,
   },
   {
     name: 'list_changed_notes',
     description:
-      'Detect knowledge notes (brain/, decisions/, architecture/, code/) changed outside cadence (hand-edits in Obsidian) since the last acknowledged sync: added, modified, or deleted vs the tracked baseline in cadence/.brain-state.json. Pass acknowledge: true after reconciling to mark everything seen (first ever acknowledge creates the baseline). Hand-edited content is ground truth — read it before writing over it.',
+      'Knowledge notes (brain/, decisions/, architecture/, code/) changed outside cadence since the last acknowledged sync. Hand-edits are ground truth — read before overwriting. Pass acknowledge: true after reconciling (first acknowledge creates the baseline).',
     inputSchema: {
       type: 'object',
       properties: {
-        acknowledge: { type: 'boolean', description: 'Snapshot the current knowledge dirs as the new baseline after you have reconciled the changes' },
+        acknowledge: { type: 'boolean', description: 'Snapshot current state as the new baseline' },
       },
     },
     handler: listChangedNotes,
   },
 ];
 
-const SERVER_INFO = { name: 'cadence-brain', version: '0.11.0' };
+function pluginVersion() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.claude-plugin', 'plugin.json'), 'utf8')).version;
+  } catch {
+    return '0.0.0';
+  }
+}
+
+const SERVER_INFO = { name: 'cadence-brain', version: pluginVersion() };
 
 function handleMessage(msg, dir) {
   const hasId = msg.id !== undefined && msg.id !== null;
@@ -531,6 +571,7 @@ module.exports = {
   readState,
   diffBrainState,
   listChangedNotes,
+  vaultAlerts,
   handleMessage,
   TOOLS,
 };

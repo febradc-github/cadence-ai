@@ -153,7 +153,7 @@ with a `cadence/` directory, except the commit guard, which is safe anywhere):
 
 | Hook | Event | Enforces |
 |---|---|---|
-| `remind.js` | UserPromptSubmit | Re-injects the gate rules and conversate routing each turn; flags hand-edited knowledge notes and stray link-hijacking notes (Obsidian click-artifacts that shadow ticket-id aliases). |
+| `remind.js` | UserPromptSubmit | Injects the full gate rules on the first prompt of a session (refreshed every 30 prompts so it survives context compaction) and a one-line anchor on every other prompt; flags hand-edited knowledge notes and stray link-hijacking notes (Obsidian click-artifacts that shadow ticket-id aliases). Session tracking lives in `cadence/.remind-state.json`. |
 | `guard.js` | PreToolUse (all file + shell tools) | Blocks `git commit --no-verify` and Anthropic/Claude attribution lines; blocks any access to env files (`.env`, `.env.*`, `*.env`, `.envrc`) by path, glob, or shell command -- secrets are never read. |
 | `validate-board.js` | PostToolUse (Write/Edit) | Board invariants: valid statuses (incl. `dropped`), `C-<n>` ids, no duplicate ids, one `in_progress` item, one active sprint (`sprint.yml`; archives in `sprints/` must be completed), one live copy per item, hierarchy rules (`type`/`parent` values, epics stay in the backlog, epic -> story -> task nesting only, containers never `ready`). |
 
@@ -188,6 +188,23 @@ gated skills are deliberately untracked.
 Run its tests with:
 
     node --test scripts/brain-mcp.test.js scripts/open-obsidian.test.js
+
+## Token efficiency
+
+`scripts/token-report.js` measures the context-window overhead the plugin
+injects into a session — session-fixed descriptions and MCP tool schemas, the
+per-prompt reminder (simulated with real hook runs, periodic refreshes
+included), and the skill/agent bodies of a reference workflow:
+
+    node scripts/token-report.js [pluginRoot] [--turns N] [--json]
+
+Compare two versions by running it against a git worktree of the old ref and
+the working tree. Measured against v0.17.1, v0.18.0 cut the recurring
+per-prompt reminder by 80.6% over a 30-turn session (19,530 → 3,783 chars)
+and 80.1% over 100 turns (65,100 → 12,972 chars); total plugin-emitted
+context fell 27% (30 turns) to 47% (100 turns), growing with session length.
+`search_notes` results are capped (default 20 notes, `limit` up to 100) so a
+broad query on a large vault cannot flood the context window.
 
 ## Usage
 
@@ -230,3 +247,9 @@ it classifies intent and drives the same sequence for you. Epic-sized ideas,
 `/cadence:quick`, and bug fixes take the side doors described in
 [Workflow](#workflow) but rejoin this same spec -> ready -> sprint -> review
 sequence.
+
+## License
+
+MIT — see [LICENSE](LICENSE). CI runs the full test suite on Linux and
+Windows (Node 20 and 22) plus a version-consistency check on every push and
+pull request.

@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.18.0 — 2026-07-13
+
+Token-efficiency and enterprise-readiness release. All numbers below are
+measured (scripts/token-report.js, real hook runs against a v0.17.1 git
+worktree), not estimated.
+
+- `remind.js` is session-aware: the full workflow reminder is injected on the
+  first prompt of a session and every 30th after (so it survives context
+  compaction); every other prompt gets a one-line anchor. Recurring reminder
+  overhead drops 80.6% over a 30-turn session (19,530 -> 3,783 chars) and
+  80.1% over 100 turns (65,100 -> 12,972). Total plugin-emitted context falls
+  27% (30 turns) to 47% (100 turns). Without a session id on stdin the hook
+  falls back to the old always-full behavior. State lives in
+  `cadence/.remind-state.json` (pruned to 20 sessions).
+- The reminder's vault health checks (hand-edits, strays, unresolved links)
+  now share one vault load via the new `vaultAlerts` helper instead of three
+  separate full-vault reads per prompt.
+- `search_notes` caps results at 20 notes by default (`limit` up to 100) and
+  reports `total`/`truncated`, so a broad query on a large vault cannot flood
+  the context window. MCP tool descriptions trimmed ~45% with the same
+  semantics.
+- `cadence-brain` moved its note-format reference (shared frontmatter, per-
+  kind rules, stray handling, legacy paths) to
+  `skills/cadence-brain/references/note-format.md`, loaded only when a note
+  is about to be written; an `<important>` rule mandates reading it before
+  any note write. The auto-loaded body shrinks ~48% with no rule dropped.
+- The brain MCP server version now tracks plugin.json instead of a hardcoded
+  string (was stuck at 0.11.0).
+- New `scripts/token-report.js` measures plugin-injected context overhead
+  (fixed, per-prompt, invoked bodies) for any checkout, so future changes are
+  held to measured numbers.
+- Enterprise: MIT LICENSE; GitHub Actions CI (test suite on Linux + Windows,
+  Node 20/22, plugin/marketplace version-consistency check); `.gitattributes`
+  normalizes line endings (ends the CRLF warning noise on Windows). Test
+  suite grows 110 -> 121.
+
 ## 0.17.1 — 2026-07-13
 
 - Fix: `cadence-conversate` was not reliably checking `cadence/code/` before

@@ -52,6 +52,63 @@ test('remind.js appends an unresolved-link line for click-trap wikilinks', () =>
   assert.match(output, /\[\[nonexistent-note\]\] \(in api-auth\)/);
 });
 
+function runRemind(cwd, sessionId) {
+  return execFileSync('node', [REMIND_PATH], {
+    encoding: 'utf8',
+    cwd,
+    input: JSON.stringify({ session_id: sessionId, hook_event_name: 'UserPromptSubmit', prompt: 'x' }),
+  });
+}
+
+test('remind.js emits the full message on the first prompt of a session, a short anchor after', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  fs.mkdirSync(path.join(tmpDir, 'cadence'));
+  const first = runRemind(tmpDir, 'session-a');
+  const second = runRemind(tmpDir, 'session-a');
+  assert.equal(first, EXPECTED_MESSAGE);
+  assert.notEqual(second, EXPECTED_MESSAGE);
+  assert.ok(second.length < EXPECTED_MESSAGE.length / 4, `anchor too long: ${second.length} chars`);
+  assert.match(second, /cadence/i);
+  assert.match(second, /conversate/);
+});
+
+test('remind.js emits the full message again for a different session id', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  fs.mkdirSync(path.join(tmpDir, 'cadence'));
+  runRemind(tmpDir, 'session-a');
+  const otherSession = runRemind(tmpDir, 'session-b');
+  assert.equal(otherSession, EXPECTED_MESSAGE);
+});
+
+test('remind.js re-emits the full message periodically within one session', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  fs.mkdirSync(path.join(tmpDir, 'cadence'));
+  let fullCount = 0;
+  for (let i = 0; i < 61; i++) {
+    if (runRemind(tmpDir, 'session-a') === EXPECTED_MESSAGE) fullCount++;
+  }
+  assert.ok(fullCount >= 2, `full message emitted ${fullCount} time(s) in 61 prompts; expected a periodic refresh`);
+  assert.ok(fullCount <= 4, `full message emitted ${fullCount} time(s) in 61 prompts; refresh too frequent`);
+});
+
+test('remind.js still appends alert lines on anchor turns', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  const vault = path.join(tmpDir, 'cadence');
+  fs.mkdirSync(vault);
+  runRemind(tmpDir, 'session-a');
+  fs.writeFileSync(path.join(vault, 'stray.md'), '');
+  const anchorTurn = runRemind(tmpDir, 'session-a');
+  assert.notEqual(anchorTurn.slice(0, 30), EXPECTED_MESSAGE.slice(0, 30));
+  assert.match(anchorTurn, /1 stray note\(s\) hijacking wikilinks/);
+});
+
+test('remind.js falls back to the full message when stdin has no session id', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  fs.mkdirSync(path.join(tmpDir, 'cadence'));
+  const output = execFileSync('node', [REMIND_PATH], { encoding: 'utf8', cwd: tmpDir, input: 'not json' });
+  assert.equal(output, EXPECTED_MESSAGE);
+});
+
 test('remind.js appends a hand-edit line when tracked knowledge notes changed', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
   const vault = path.join(tmpDir, 'cadence');
