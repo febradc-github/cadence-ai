@@ -178,11 +178,12 @@ process.stdin.on('end', () => {
   } catch {
     process.exit(0);
   }
-  const filePath = (input.tool_input && input.tool_input.file_path) || '';
+  // Claude Code passes file_path; kimi-code's Write/Edit tools pass path.
+  const filePath = (input.tool_input && (input.tool_input.file_path || input.tool_input.path)) || '';
   let cadenceDir = null;
-  if (/[\\/]cadence[\\/](backlog\.yml|sprint\.yml|sprint-\d+\.yml)$/.test(filePath)) {
+  if (/[\\/]turnstile[\\/](backlog\.yml|sprint\.yml|sprint-\d+\.yml)$/.test(filePath)) {
     cadenceDir = path.dirname(filePath);
-  } else if (/[\\/]cadence[\\/]sprints[\\/]sprint-\d+\.yml$/.test(filePath)) {
+  } else if (/[\\/]turnstile[\\/]sprints[\\/]sprint-\d+\.yml$/.test(filePath)) {
     cadenceDir = path.dirname(path.dirname(filePath));
   }
   if (!cadenceDir) process.exit(0);
@@ -193,6 +194,6 @@ process.stdin.on('end', () => {
     process.exit(0); // validator error must never break the session
   }
   if (problems.length === 0) process.exit(0);
-  process.stderr.write('cadence board validation failed:\n- ' + problems.join('\n- ') + '\n');
+  process.stderr.write('turnstile board validation failed:\n- ' + problems.join('\n- ') + '\n');
   process.exit(2);
 });

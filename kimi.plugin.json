@@ -1,0 +1,42 @@
+{
+  "name": "turnstile",
+  "version": "0.21.0",
+  "description": "Opinionated, gated workflow for solo development: conversate, brainstorm, refine, breakdown, spec, sprint-plan, work, and review epics, stories, and tasks on a file-based board, plus independent debugging and code review, with a persistent, Obsidian-linked knowledge brain.",
+  "author": {
+    "name": "Dan Christian Febra"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/febradc-github/turnstile",
+  "keywords": ["workflow", "sprint", "board", "tdd", "obsidian"],
+  "interface": {
+    "displayName": "Turnstile",
+    "shortDescription": "Gate-first workflow: one ticket at a time, nothing ships without passing its gate."
+  },
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "mcpServers": {
+    "turnstile-brain": {
+      "command": "node",
+      "args": ["./scripts/brain-mcp-server.js"]
+    }
+  },
+  "hooks": [
+    {
+      "event": "UserPromptSubmit",
+      "command": "node ./hooks/remind.js",
+      "timeout": 10
+    },
+    {
+      "event": "PreToolUse",
+      "matcher": "Bash|PowerShell|Read|Edit|Write|NotebookEdit|Grep|Glob",
+      "command": "node ./hooks/guard.js",
+      "timeout": 10
+    },
+    {
+      "event": "PostToolUse",
+      "matcher": "Write|Edit",
+      "command": "node ./hooks/validate-board.js",
+      "timeout": 10
+    }
+  ]
+}

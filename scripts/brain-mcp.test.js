@@ -28,7 +28,7 @@ const {
 
 function makeFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
-  const vault = path.join(root, 'cadence');
+  const vault = path.join(root, 'turnstile');
   const brain = path.join(vault, 'brain');
   const decisions = path.join(vault, 'decisions');
   const epics = path.join(vault, 'epics');
@@ -248,7 +248,7 @@ test('writeNote rejects bad names, folders, and collisions with workflow notes',
 
 test('writeNote creates the target dir when missing', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-empty-'));
-  const vault = path.join(root, 'cadence');
+  const vault = path.join(root, 'turnstile');
   fs.mkdirSync(vault, { recursive: true });
   writeNote(vault, { name: 'first', content: 'x' });
   assert.ok(fs.existsSync(path.join(vault, 'brain', 'first.md')));
@@ -460,7 +460,7 @@ test('code notes are indexed by search and backlinks', () => {
 test('vaultAlerts returns strays, unresolved links, and changed notes from one vault load', () => {
   const { vaultAlerts } = require('./brain-mcp.js');
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
-  const vault = path.join(root, 'cadence');
+  const vault = path.join(root, 'turnstile');
   const brain = path.join(vault, 'brain');
   fs.mkdirSync(brain, { recursive: true });
   fs.writeFileSync(path.join(brain, 'known.md'), '# Known\n\nSee [[missing-target]].\n');
@@ -477,7 +477,7 @@ test('vaultAlerts returns strays, unresolved links, and changed notes from one v
 test('vaultAlerts matches the individual tools output', () => {
   const { vaultAlerts } = require('./brain-mcp.js');
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
-  const vault = path.join(root, 'cadence');
+  const vault = path.join(root, 'turnstile');
   const brain = path.join(vault, 'brain');
   fs.mkdirSync(brain, { recursive: true });
   fs.writeFileSync(path.join(brain, 'a.md'), 'See [[nowhere]].\n');
@@ -490,12 +490,12 @@ test('vaultAlerts matches the individual tools output', () => {
 test('vaultAlerts returns null when no vault exists', () => {
   const { vaultAlerts } = require('./brain-mcp.js');
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
-  assert.equal(vaultAlerts(path.join(root, 'cadence')), null);
+  assert.equal(vaultAlerts(path.join(root, 'turnstile')), null);
 });
 
 test('search_notes caps results at 20 by default and reports truncation', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
-  const vault = path.join(root, 'cadence');
+  const vault = path.join(root, 'turnstile');
   const brain = path.join(vault, 'brain');
   fs.mkdirSync(brain, { recursive: true });
   for (let i = 0; i < 25; i++) {
@@ -509,7 +509,7 @@ test('search_notes caps results at 20 by default and reports truncation', () => 
 
 test('search_notes respects an explicit limit and omits truncation fields when complete', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-fixture-'));
-  const vault = path.join(root, 'cadence');
+  const vault = path.join(root, 'turnstile');
   const brain = path.join(vault, 'brain');
   fs.mkdirSync(brain, { recursive: true });
   for (let i = 0; i < 5; i++) {

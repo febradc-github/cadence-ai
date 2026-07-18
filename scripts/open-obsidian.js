@@ -70,7 +70,7 @@ function ensureVaultRegistered(deps, vaultPath) {
 
 function openObsidian(deps) {
   const projectDir = deps.env.CLAUDE_PROJECT_DIR || deps.cwd;
-  const cadenceDir = path.resolve(projectDir, 'cadence');
+  const cadenceDir = path.resolve(projectDir, 'turnstile');
   if (!deps.exists(cadenceDir)) return { opened: false, reason: 'no-turnstile-dir' };
   const vaultConfigured = deps.exists(path.join(cadenceDir, '.obsidian'));
   const registration = ensureVaultRegistered(deps, cadenceDir);

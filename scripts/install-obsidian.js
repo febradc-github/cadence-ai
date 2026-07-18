@@ -152,7 +152,7 @@ const VAULT_FILES = {
 };
 
 function scaffold(deps) {
-  const cadenceDir = path.join(deps.cwd, 'cadence');
+  const cadenceDir = path.join(deps.cwd, 'turnstile');
   if (!deps.exists(cadenceDir)) {
     return { scaffolded: false, reason: 'no-turnstile-dir' };
   }

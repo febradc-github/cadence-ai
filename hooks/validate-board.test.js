@@ -9,7 +9,7 @@ const VALIDATOR_PATH = path.join(__dirname, 'validate-board.js');
 
 function makeCadenceDir(files) {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-validate-test-'));
-  const cadenceDir = path.join(tmpDir, 'cadence');
+  const cadenceDir = path.join(tmpDir, 'turnstile');
   fs.mkdirSync(cadenceDir);
   for (const [name, content] of Object.entries(files)) {
     const filePath = path.join(cadenceDir, name);

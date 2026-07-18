@@ -17,7 +17,7 @@ test('initState creates turnstile/loops/<id>/state.json with correct initial sha
   const root = makeTmp();
   initState('L-1', 'Optimize query', 'p99 < 200ms', 5, 'autonomous', root);
 
-  const stateFile = path.join(root, 'cadence', 'loops', 'L-1', 'state.json');
+  const stateFile = path.join(root, 'turnstile', 'loops', 'L-1', 'state.json');
   assert.ok(fs.existsSync(stateFile), 'state.json should exist');
 
   const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
@@ -36,7 +36,7 @@ test('initState accepts manual mode', () => {
   const root = makeTmp();
   initState('L-2', 'Fix flaky test', 'CI green', 3, 'manual', root);
 
-  const stateFile = path.join(root, 'cadence', 'loops', 'L-2', 'state.json');
+  const stateFile = path.join(root, 'turnstile', 'loops', 'L-2', 'state.json');
   const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
   assert.equal(state.mode, 'manual');
 });
@@ -45,7 +45,7 @@ test('initState creates parent directories when they do not exist', () => {
   const root = makeTmp();
   // No turnstile/loops directory yet -- initState should create it.
   initState('L-3', 'goal', 'success', 10, 'autonomous', root);
-  assert.ok(fs.existsSync(path.join(root, 'cadence', 'loops', 'L-3', 'state.json')));
+  assert.ok(fs.existsSync(path.join(root, 'turnstile', 'loops', 'L-3', 'state.json')));
 });
 
 test('initState throws when maxIterations is not a positive integer', () => {
@@ -177,7 +177,7 @@ test('readState throws when state.json does not exist', () => {
 
 test('readState throws when state.json is corrupt JSON', () => {
   const root = makeTmp();
-  const dir = path.join(root, 'cadence', 'loops', 'L-bad');
+  const dir = path.join(root, 'turnstile', 'loops', 'L-bad');
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'state.json'), 'not json');
   assert.throws(() => readState('L-bad', root), /parse|JSON|invalid/i);

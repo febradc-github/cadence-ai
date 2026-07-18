@@ -483,7 +483,7 @@ const TOOLS = [
   {
     name: 'list_changed_notes',
     description:
-      'Knowledge notes changed outside cadence since the last acknowledged sync (hand-edits are ground truth). Pass acknowledge: true after reconciling; the first acknowledge creates the baseline.',
+      'Knowledge notes changed outside turnstile since the last acknowledged sync (hand-edits are ground truth). Pass acknowledge: true after reconciling; the first acknowledge creates the baseline.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -530,8 +530,29 @@ function handleMessage(msg, dir) {
   return null;
 }
 
+// Resolves the vault root (<project>/turnstile). Claude Code provides
+// CLAUDE_PROJECT_DIR; kimi-code spawns plugin MCP servers from the plugin
+// root with no project env var and no roots support, so fall back to the
+// hint file the remind hook writes on every prompt in a turnstile project.
+function vaultDir() {
+  if (process.env.CLAUDE_PROJECT_DIR) return path.join(process.env.CLAUDE_PROJECT_DIR, 'turnstile');
+  const fromCwd = path.join(process.cwd(), 'turnstile');
+  if (fs.existsSync(fromCwd)) return fromCwd;
+  if (process.env.KIMI_PLUGIN_ROOT) {
+    try {
+      const hint = JSON.parse(fs.readFileSync(path.join(process.env.KIMI_PLUGIN_ROOT, '.turnstile-project.json'), 'utf8'));
+      if (hint && typeof hint.projectDir === 'string' && hint.projectDir) {
+        return path.join(hint.projectDir, 'turnstile');
+      }
+    } catch {
+      // no usable hint yet (the hook has not run): fall through to cwd
+    }
+  }
+  return fromCwd;
+}
+
 function main() {
-  const dir = path.join(process.env.CLAUDE_PROJECT_DIR || process.cwd(), 'cadence');
+  const dir = vaultDir();
   const rl = readline.createInterface({ input: process.stdin, terminal: false });
   rl.on('line', (line) => {
     const trimmed = line.trim();
@@ -550,6 +571,7 @@ function main() {
 if (require.main === module) main();
 
 module.exports = {
+  main,
   KNOWLEDGE_DIRS,
   parseLinks,
   parseTags,

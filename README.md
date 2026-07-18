@@ -21,6 +21,18 @@ In Claude Code:
 4. Back in the plugin menu, install **turnstile** from the `turnstile`
    marketplace.
 
+In kimi-code:
+
+1. Run `/plugins install https://github.com/febradc-github/turnstile`
+   (or `/plugins install /path/to/turnstile` for a local checkout).
+2. Run `/reload` (or start a new session) to activate it.
+
+The kimi-code manifest is `kimi.plugin.json` (skills, commands, the brain MCP
+server, and hooks). One caveat: kimi-code does not support plugin-defined
+sub-agents, so the five agents below are Claude Code-only -- under kimi-code
+the skills that dispatch them fall back to the built-in `coder` sub-agent or
+the main session.
+
 ## Install (local development)
 
     claude --plugin-dir ./turnstile
@@ -198,8 +210,11 @@ finds `EP-12`), while link-resolution checks (`list_unresolved_links`,
 filenames only.
 `write_note` targets the knowledge folders only (`brain/` by default, or
 `folder: decisions` / `folder: architecture` / `folder: code`). Registered
-via `.mcp.json`; agents without a `tools:` restriction (like
-`brain-curator`) can use these automatically.
+via `.mcp.json` on Claude Code and via `kimi.plugin.json` on kimi-code
+(`scripts/brain-mcp-server.js` is the entry point there, since kimi-code
+loads plugin scripts with `require()`, bypassing the `require.main` guard);
+agents without a `tools:` restriction (like `brain-curator`) can use these
+automatically.
 
 The knowledge folders are two-way aware: `list_changed_notes` diffs `brain/`,
 `decisions/`, `architecture/`, and `code/` against the baseline in

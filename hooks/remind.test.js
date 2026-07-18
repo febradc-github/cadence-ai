@@ -17,14 +17,14 @@ test('remind.js prints nothing when no turnstile/ directory exists', () => {
 
 test('remind.js prints the workflow + routing reminder when turnstile/ directory exists', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
-  fs.mkdirSync(path.join(tmpDir, 'cadence'));
+  fs.mkdirSync(path.join(tmpDir, 'turnstile'));
   const output = execFileSync('node', [REMIND_PATH], { encoding: 'utf8', cwd: tmpDir });
   assert.equal(output, EXPECTED_MESSAGE);
 });
 
 test('remind.js appends a stray-note line when a root file shadows an alias', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
-  const vault = path.join(tmpDir, 'cadence');
+  const vault = path.join(tmpDir, 'turnstile');
   const epics = path.join(vault, 'epics');
   fs.mkdirSync(epics, { recursive: true });
   fs.writeFileSync(
@@ -40,7 +40,7 @@ test('remind.js appends a stray-note line when a root file shadows an alias', ()
 
 test('remind.js appends an unresolved-link line for click-trap wikilinks', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
-  const brain = path.join(tmpDir, 'cadence', 'brain');
+  const brain = path.join(tmpDir, 'turnstile', 'brain');
   fs.mkdirSync(brain, { recursive: true });
   fs.writeFileSync(
     path.join(brain, 'api-auth.md'),
@@ -62,7 +62,7 @@ function runRemind(cwd, sessionId) {
 
 test('remind.js emits the full message on the first prompt of a session, a short anchor after', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
-  fs.mkdirSync(path.join(tmpDir, 'cadence'));
+  fs.mkdirSync(path.join(tmpDir, 'turnstile'));
   const first = runRemind(tmpDir, 'session-a');
   const second = runRemind(tmpDir, 'session-a');
   assert.equal(first, EXPECTED_MESSAGE);
@@ -74,7 +74,7 @@ test('remind.js emits the full message on the first prompt of a session, a short
 
 test('remind.js emits the full message again for a different session id', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
-  fs.mkdirSync(path.join(tmpDir, 'cadence'));
+  fs.mkdirSync(path.join(tmpDir, 'turnstile'));
   runRemind(tmpDir, 'session-a');
   const otherSession = runRemind(tmpDir, 'session-b');
   assert.equal(otherSession, EXPECTED_MESSAGE);
@@ -82,7 +82,7 @@ test('remind.js emits the full message again for a different session id', () => 
 
 test('remind.js re-emits the full message periodically within one session', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
-  fs.mkdirSync(path.join(tmpDir, 'cadence'));
+  fs.mkdirSync(path.join(tmpDir, 'turnstile'));
   let fullCount = 0;
   for (let i = 0; i < 61; i++) {
     if (runRemind(tmpDir, 'session-a') === EXPECTED_MESSAGE) fullCount++;
@@ -93,7 +93,7 @@ test('remind.js re-emits the full message periodically within one session', () =
 
 test('remind.js still appends alert lines on anchor turns', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
-  const vault = path.join(tmpDir, 'cadence');
+  const vault = path.join(tmpDir, 'turnstile');
   fs.mkdirSync(vault);
   runRemind(tmpDir, 'session-a');
   fs.writeFileSync(path.join(vault, 'stray.md'), '');
@@ -104,14 +104,14 @@ test('remind.js still appends alert lines on anchor turns', () => {
 
 test('remind.js falls back to the full message when stdin has no session id', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
-  fs.mkdirSync(path.join(tmpDir, 'cadence'));
+  fs.mkdirSync(path.join(tmpDir, 'turnstile'));
   const output = execFileSync('node', [REMIND_PATH], { encoding: 'utf8', cwd: tmpDir, input: 'not json' });
   assert.equal(output, EXPECTED_MESSAGE);
 });
 
 test('remind.js appends a hand-edit line when tracked knowledge notes changed', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
-  const vault = path.join(tmpDir, 'cadence');
+  const vault = path.join(tmpDir, 'turnstile');
   const brain = path.join(vault, 'brain');
   fs.mkdirSync(brain, { recursive: true });
   fs.writeFileSync(path.join(brain, 'known.md'), '# Known\n');

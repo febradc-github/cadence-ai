@@ -44,7 +44,7 @@ test('open refuses without a cadence dir', () => {
 });
 
 test('open on windows uses cmd start and reports hotkey + vault status', () => {
-  const cadence = path.resolve('D:\\proj', 'cadence');
+  const cadence = path.resolve('D:\\proj', 'turnstile');
   const { deps, calls } = makeDeps({ existing: [cadence] });
   const result = openObsidian(deps);
   assert.equal(result.opened, true);
@@ -55,7 +55,7 @@ test('open on windows uses cmd start and reports hotkey + vault status', () => {
 });
 
 test('open on macos uses open and Cmd+G; configured vault is reported', () => {
-  const cadence = path.resolve('/proj', 'cadence');
+  const cadence = path.resolve('/proj', 'turnstile');
   const { deps, calls } = makeDeps({
     platform: 'darwin',
     cwd: '/proj',
@@ -69,14 +69,14 @@ test('open on macos uses open and Cmd+G; configured vault is reported', () => {
 });
 
 test('open on linux uses xdg-open', () => {
-  const cadence = path.resolve('/proj', 'cadence');
+  const cadence = path.resolve('/proj', 'turnstile');
   const { deps, calls } = makeDeps({ platform: 'linux', cwd: '/proj', existing: [cadence] });
   assert.equal(openObsidian(deps).opened, true);
   assert.equal(calls.run[0][0], 'xdg-open');
 });
 
 test('open on unsupported platform returns the uri for manual use', () => {
-  const cadence = path.resolve('/proj', 'cadence');
+  const cadence = path.resolve('/proj', 'turnstile');
   const { deps, calls } = makeDeps({ platform: 'freebsd', cwd: '/proj', existing: [cadence] });
   const result = openObsidian(deps);
   assert.equal(result.opened, false);
@@ -86,7 +86,7 @@ test('open on unsupported platform returns the uri for manual use', () => {
 });
 
 test('open surfaces opener failure', () => {
-  const cadence = path.resolve('D:\\proj', 'cadence');
+  const cadence = path.resolve('D:\\proj', 'turnstile');
   const { deps } = makeDeps({ existing: [cadence], runResult: { status: 1, stdout: '', stderr: 'no handler' } });
   const result = openObsidian(deps);
   assert.equal(result.opened, false);
@@ -95,7 +95,7 @@ test('open surfaces opener failure', () => {
 });
 
 test('open registers the vault in the global registry before launching', () => {
-  const cadence = path.resolve('D:\\proj', 'cadence');
+  const cadence = path.resolve('D:\\proj', 'turnstile');
   const registry = path.join('C:\\Users\\d\\AppData\\Roaming', 'obsidian', 'obsidian.json');
   const { deps, calls } = makeDeps({
     existing: [cadence],
@@ -112,7 +112,7 @@ test('open registers the vault in the global registry before launching', () => {
 });
 
 test('an already-registered vault is not duplicated (case-insensitive on windows)', () => {
-  const cadence = path.resolve('D:\\proj', 'cadence');
+  const cadence = path.resolve('D:\\proj', 'turnstile');
   const registry = path.join('C:\\Users\\d\\AppData\\Roaming', 'obsidian', 'obsidian.json');
   const { deps, calls } = makeDeps({
     existing: [cadence],
@@ -126,7 +126,7 @@ test('an already-registered vault is not duplicated (case-insensitive on windows
 });
 
 test('open creates the registry when Obsidian has never written one', () => {
-  const cadence = path.resolve('/proj', 'cadence');
+  const cadence = path.resolve('/proj', 'turnstile');
   const registry = path.join('/home/d', '.config', 'obsidian', 'obsidian.json');
   const { deps, calls } = makeDeps({
     platform: 'linux',
@@ -142,7 +142,7 @@ test('open creates the registry when Obsidian has never written one', () => {
 });
 
 test('open finds the snap registry on linux when it exists', () => {
-  const cadence = path.resolve('/proj', 'cadence');
+  const cadence = path.resolve('/proj', 'turnstile');
   const snapRegistry = path.join('/home/d', 'snap', 'obsidian', 'current', '.config', 'obsidian', 'obsidian.json');
   const { deps, calls } = makeDeps({
     platform: 'linux',
@@ -157,7 +157,7 @@ test('open finds the snap registry on linux when it exists', () => {
 });
 
 test('registration failure is reported but does not block opening', () => {
-  const cadence = path.resolve('D:\\proj', 'cadence');
+  const cadence = path.resolve('D:\\proj', 'turnstile');
   const registry = path.join('C:\\Users\\d\\AppData\\Roaming', 'obsidian', 'obsidian.json');
   const { deps } = makeDeps({
     existing: [cadence],
@@ -172,7 +172,7 @@ test('registration failure is reported but does not block opening', () => {
 });
 
 test('a corrupt registry is left alone and reported', () => {
-  const cadence = path.resolve('D:\\proj', 'cadence');
+  const cadence = path.resolve('D:\\proj', 'turnstile');
   const registry = path.join('C:\\Users\\d\\AppData\\Roaming', 'obsidian', 'obsidian.json');
   const { deps, calls } = makeDeps({
     existing: [cadence],
@@ -187,7 +187,7 @@ test('a corrupt registry is left alone and reported', () => {
 });
 
 test('CLAUDE_PROJECT_DIR overrides cwd', () => {
-  const cadence = path.resolve('/elsewhere', 'cadence');
+  const cadence = path.resolve('/elsewhere', 'turnstile');
   const { deps } = makeDeps({
     platform: 'linux',
     cwd: '/proj',

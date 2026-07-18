@@ -89,7 +89,7 @@ try {
 const { execFileSync } = require('node:child_process');
 const os = require('node:os');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-token-report-'));
-fs.mkdirSync(path.join(tmp, 'cadence'), { recursive: true });
+fs.mkdirSync(path.join(tmp, 'turnstile'), { recursive: true });
 function remindOutput(sessionId) {
   try {
     return execFileSync('node', [path.join(root, 'hooks', 'remind.js')], {

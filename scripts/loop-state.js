@@ -23,7 +23,7 @@ const VALID_MODES = ['autonomous', 'manual'];
 const VALID_FINAL_STATUSES = ['success', 'max_iterations_reached', 'error'];
 
 function stateDir(id, projectRoot) {
-  return path.join(projectRoot, 'cadence', 'loops', id);
+  return path.join(projectRoot, 'turnstile', 'loops', id);
 }
 
 function stateFile(id, projectRoot) {

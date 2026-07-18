@@ -512,7 +512,7 @@ if (require.main === module) {
   const root = projectRoot || process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
   // Validate state.json exists before starting the server.
-  const stateFilePath = path.join(root, 'cadence', 'loops', id, 'state.json');
+  const stateFilePath = path.join(root, 'turnstile', 'loops', id, 'state.json');
   if (!fs.existsSync(stateFilePath)) {
     process.stderr.write(`Loop state not found: ${stateFilePath}\n`);
     process.exit(1);

@@ -197,7 +197,7 @@ test('scaffold is a no-op when turnstile/.obsidian already exists', () => {
   const writes = [];
   const { deps } = makeDeps({
     cwd: '/proj',
-    existing: [path.join('/proj', 'cadence'), path.join('/proj', 'cadence', '.obsidian')],
+    existing: [path.join('/proj', 'turnstile'), path.join('/proj', 'turnstile', '.obsidian')],
   });
   deps.writeFile = (p) => writes.push(p);
   assert.deepEqual(scaffold(deps), { scaffolded: false, reason: 'already-exists' });
@@ -207,11 +207,11 @@ test('scaffold is a no-op when turnstile/.obsidian already exists', () => {
 test('scaffold writes the three captured vault files on first run', () => {
   const writes = {};
   const mkdirs = [];
-  const { deps } = makeDeps({ cwd: '/proj', existing: [path.join('/proj', 'cadence')] });
+  const { deps } = makeDeps({ cwd: '/proj', existing: [path.join('/proj', 'turnstile')] });
   deps.mkdir = (p) => mkdirs.push(p);
   deps.writeFile = (p, c) => { writes[path.basename(p)] = c; };
   assert.deepEqual(scaffold(deps), { scaffolded: true, reason: 'created' });
-  assert.deepEqual(mkdirs, [path.join('/proj', 'cadence', '.obsidian')]);
+  assert.deepEqual(mkdirs, [path.join('/proj', 'turnstile', '.obsidian')]);
   assert.deepEqual(Object.keys(writes).sort(), ['app.json', 'appearance.json', 'core-plugins.json']);
   // New notes default into brain/ so unresolved-link clicks can't create
   // alias-shadowing strays at the vault root.

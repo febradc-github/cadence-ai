@@ -7,25 +7,18 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const cadenceDir = path.join(process.cwd(), 'cadence');
-if (!fs.existsSync(cadenceDir)) {
-  process.exit(0);
-}
-
 const MESSAGE =
   "This project uses the cadence workflow; never skip a gate. Only /turnstile:review marks an item done; search turnstile/brain/ before starting new work. Never read env files (.env, .env.*, *.env, .envrc) -- no tool, no shell command, no exceptions; ask the user for config values. If this message concerns project work (an idea, a ticket, a bug, a review request, or board status), invoke the turnstile-conversate skill to classify and route it -- unless you just asked the user a follow-up question inside a gated cadence skill (refine/breakdown/spec/sprint-plan/quick/drop/work/review). Answer messages unrelated to cadence work normally, without routing.\n";
 const ANCHOR = 'cadence active: route project work via the turnstile-conversate skill; gates and the no-env-files rule apply.\n';
 const REFRESH_EVERY = 30; // full message on prompts 1, 31, 61, ...
 const MAX_TRACKED_SESSIONS = 20;
 
-const STATE_PATH = path.join(cadenceDir, '.remind-state.json');
-
 // Returns the number of prompts seen so far in this session (0 for the
 // first), updating the state file. Any failure means "first prompt".
-function promptIndex(sessionId) {
+function promptIndex(statePath, sessionId) {
   let state = { sessions: {} };
   try {
-    const parsed = JSON.parse(fs.readFileSync(STATE_PATH, 'utf8'));
+    const parsed = JSON.parse(fs.readFileSync(statePath, 'utf8'));
     if (parsed && typeof parsed.sessions === 'object' && parsed.sessions !== null) state = parsed;
   } catch {
     // missing or corrupt state: treat as fresh
@@ -41,14 +34,14 @@ function promptIndex(sessionId) {
       .forEach((id) => delete state.sessions[id]);
   }
   try {
-    fs.writeFileSync(STATE_PATH, JSON.stringify(state) + '\n');
+    fs.writeFileSync(statePath, JSON.stringify(state) + '\n');
   } catch {
     // read-only project: fall back to full message every prompt
   }
   return index;
 }
 
-function alertLines() {
+function alertLines(cadenceDir) {
   let handEditLine = '';
   let strayLine = '';
   let unresolvedLine = '';
@@ -58,7 +51,7 @@ function alertLines() {
     if (!alerts) return '';
     if (alerts.changed.length > 0) {
       const names = alerts.changed.slice(0, 5).map((c) => c.name).join(', ');
-      handEditLine = `${alerts.changed.length} knowledge note(s) changed outside cadence since last sync (hand-edits in Obsidian?): ${names}. Dispatch brain-curator to reconcile (list_changed_notes MCP tool, acknowledge when done).\n`;
+      handEditLine = `${alerts.changed.length} knowledge note(s) changed outside turnstile since last sync (hand-edits in Obsidian?): ${names}. Dispatch brain-curator to reconcile (list_changed_notes MCP tool, acknowledge when done).\n`;
     }
     if (alerts.strays.length > 0) {
       const described = alerts.strays
@@ -84,13 +77,34 @@ let raw = '';
 process.stdin.on('data', (chunk) => (raw += chunk));
 process.stdin.on('end', () => {
   let sessionId = null;
+  // Prefer the payload's cwd: plugin hosts may run hooks with the plugin
+  // root (not the project) as the working directory.
+  let projectDir = process.cwd();
   try {
     const input = JSON.parse(raw);
     if (input && typeof input.session_id === 'string' && input.session_id) sessionId = input.session_id;
+    if (input && typeof input.cwd === 'string' && input.cwd) projectDir = input.cwd;
   } catch {
     // no usable stdin: emit the full message below
   }
-  const index = sessionId === null ? 0 : promptIndex(sessionId);
+  const cadenceDir = path.join(projectDir, 'turnstile');
+  if (!fs.existsSync(cadenceDir)) {
+    process.exit(0);
+  }
+  // kimi-code runs plugin hooks (and the brain MCP server) with the plugin
+  // root as cwd and no project env var, so leave a hint the MCP server can
+  // read to find this project's vault. No-op on other hosts.
+  if (process.env.KIMI_PLUGIN_ROOT) {
+    try {
+      fs.writeFileSync(
+        path.join(process.env.KIMI_PLUGIN_ROOT, '.turnstile-project.json'),
+        JSON.stringify({ projectDir }) + '\n'
+      );
+    } catch {
+      // a stale or missing hint only degrades the brain MCP, never the hook
+    }
+  }
+  const index = sessionId === null ? 0 : promptIndex(path.join(cadenceDir, '.remind-state.json'), sessionId);
   const preamble = index % REFRESH_EVERY === 0 ? MESSAGE : ANCHOR;
-  process.stdout.write(preamble + alertLines());
+  process.stdout.write(preamble + alertLines(cadenceDir));
 });
