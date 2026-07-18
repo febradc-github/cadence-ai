@@ -19,6 +19,14 @@
 - `/turnstile:quick` ceiling raised from 2 to 3 points and made
   configurable (`quick_max_points`). The `added_mid_sprint` honesty flag
   is unchanged.
+- `cadence: sprint | flow` (default `sprint`). Flow has no sprint
+  ceremony: `ready` items queue in the backlog and the new
+  `/turnstile:next` pulls the top one onto the flow board — `sprint.yml`
+  with a `mode: flow` marker, so every board hook and invariant applies
+  unchanged. `/turnstile:sprint-plan` in flow mode explains the mode,
+  offers to archive a leftover sprint (the required step before the
+  switch takes effect), and points to `/turnstile:next`.
+  `validate-board.js` validates the `mode` header (`sprint`/`flow`).
 
 ## 0.21.0 — 2026-07-18
 

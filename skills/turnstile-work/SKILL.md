@@ -19,7 +19,7 @@ user-invocable: false
 
 ## Process
 
-1. Look up `<id>` (from `$ARGUMENTS`) in the current sprint -- `turnstile/sprint.yml`, or (legacy) the root `turnstile/sprint-<N>.yml` with `sprint.status: active`. No active sprint, or id not in it: tell the user and suggest `/turnstile:sprint-plan` (or `/turnstile:quick` for small work).
+1. Look up `<id>` (from `$ARGUMENTS`) in the current board -- `turnstile/sprint.yml` (a sprint or a `mode: flow` board), or (legacy) the root `turnstile/sprint-<N>.yml` with `sprint.status: active`. No active board, or id not on it: tell the user and suggest `/turnstile:sprint-plan` -- `/turnstile:next` in `cadence: flow` -- (or `/turnstile:quick` for small work).
 2. `assignee: human`: refuse and point the user at the item.
 3. `status` not `todo` or `in_progress` (never planned in, or mid-`review`): refuse and redirect to the correct earlier step.
 4. Another item already `in_progress`: refuse; the user finishes it via `/turnstile:review` first.

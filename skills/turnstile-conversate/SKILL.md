@@ -28,13 +28,14 @@ user-invocable: false
    - **An existing item the user wants to move forward:**
      - `type: epic`, or another item names it as `parent`: containers don't move through gates. No children yet: invoke `turnstile-breakdown`; otherwise report the children's statuses and route to the child at the earliest gate.
      - `status: idea` -> invoke `turnstile-spec` with that id. (An item only reaches `idea` after refine's design approval, so a design doc always exists -- never invoke `turnstile-refine`, which mints a brand-new id and cannot resume an existing item.)
-     - `status: ready`, not in any sprint file -> invoke `turnstile-sprint-plan`.
+     - `status: ready`, not in any sprint file -> invoke `turnstile-sprint-plan` (or `turnstile-next` when `turnstile/config.yml` says `cadence: flow`).
      - In the active sprint, `status: in_progress`, and the user says the work is finished -> invoke `turnstile-review` with that id. Check this before the next case.
      - In the active sprint, `status: todo` or `in_progress` (not being called finished) -> invoke `turnstile-work` with that id.
      - In the active sprint, `status: review` -> an interrupted review; if the user wants a verdict, invoke `turnstile-review` (it resumes). Otherwise report the status.
      - In the active sprint, `status: done` -> already shipped; say so. No skill.
      - `status: dropped` -> cancelled; relay the recorded reason. No skill.
-   - **Starting a new sprint:** invoke `turnstile-sprint-plan`.
+   - **Starting a new sprint:** invoke `turnstile-sprint-plan` (in `cadence: flow` it explains the mode instead of planning).
+   - **"What should I work on next" / pulling the next piece of work in `cadence: flow`:** invoke `turnstile-next`.
    - **Anything ambiguous:** ask one clarifying question.
 
 ## Error handling

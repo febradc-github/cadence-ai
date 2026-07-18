@@ -140,6 +140,45 @@ test('rejects two active sprints (sprint.yml plus a legacy root file)', () => {
   assert.match(result.stderr, /multiple active sprints/);
 });
 
+const GOOD_FLOW = `sprint:
+  name: "Flow board"
+  mode: flow
+  status: active
+items:
+  - id: C-3
+    title: "Third"
+    status: in_progress
+  - id: C-4
+    title: "Fourth"
+    status: todo
+`;
+
+test('accepts an active flow board (mode: flow) as the current board', () => {
+  const dir = makeCadenceDir({ 'backlog.yml': GOOD_BACKLOG, 'sprint.yml': GOOD_FLOW });
+  assert.equal(runValidator(path.join(dir, 'sprint.yml')).status, 0);
+});
+
+test('rejects an invalid board mode', () => {
+  const dir = makeCadenceDir({ 'sprint.yml': GOOD_FLOW.replace('mode: flow', 'mode: kanban') });
+  const result = runValidator(path.join(dir, 'sprint.yml'));
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /mode "kanban" is invalid/);
+});
+
+test('flow board keeps the one-in_progress invariant', () => {
+  const flow = GOOD_FLOW.replace('status: todo', 'status: in_progress');
+  const dir = makeCadenceDir({ 'sprint.yml': flow });
+  const result = runValidator(path.join(dir, 'sprint.yml'));
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /only one is allowed/);
+});
+
+test('allows a completed flow board in the archive (cadence switched back to sprint)', () => {
+  const archived = GOOD_FLOW.replace('status: active', 'status: completed');
+  const dir = makeCadenceDir({ 'backlog.yml': GOOD_BACKLOG, 'sprints/sprint-1.yml': archived });
+  assert.equal(runValidator(path.join(dir, 'backlog.yml')).status, 0);
+});
+
 test('rejects an invalid sprint status', () => {
   const dir = makeCadenceDir({ 'sprint.yml': GOOD_SPRINT.replace('status: active', 'status: open') });
   const result = runValidator(path.join(dir, 'sprint.yml'));

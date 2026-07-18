@@ -58,7 +58,8 @@ through their command wrapper or conversate's routing (via the Skill tool).
 | `/turnstile:refine [idea]` | Gap-closing dialogue; writes a design doc for approval (in `profile: solo`, a single plan artifact whose approval marks the item `ready`). Epic-sized ideas are recorded as epics and handed to breakdown. |
 | `/turnstile:breakdown [id]` | Decomposes an epic into user stories, or an oversized story into tasks; requires approval. |
 | `/turnstile:spec [id]` | Turns an approved design into a checkable spec; requires approval. (`profile: solo`: the refine plan already covered this -- explains and points onward.) |
-| `/turnstile:sprint-plan` | Starts a new sprint; archives the finished one; recommends which ready items to pull in and proposes a goal; rolls over unfinished work. |
+| `/turnstile:sprint-plan` | Starts a new sprint; archives the finished one; recommends which ready items to pull in and proposes a goal; rolls over unfinished work. (`cadence: flow`: explains the mode and offers to archive a leftover sprint instead.) |
+| `/turnstile:next` | Flow mode's pull: moves the top `ready` backlog item onto the flow board as `todo` after one confirmation. No sprint ceremony. |
 | `/turnstile:quick [description]` | Fast lane: trivial work or a diagnosed bug becomes a small task in the current sprint after one approval -- no design doc, no spec. `quick_max_points` max (default 3). |
 | `/turnstile:drop [id] [reason]` | Cancels a ticket: status `dropped` with a recorded reason. History, not deletion. |
 | `/turnstile:work [id]` | Implements one ticket with TDD. |
@@ -112,11 +113,15 @@ surfaced warning -- bad config never breaks the pipeline:
 
     profile: full          # solo | full -- solo merges design+spec into one
                            # approved plan artifact per leaf item
+    cadence: sprint        # sprint | flow -- flow replaces sprint ceremony
+                           # with a pull queue (/turnstile:next)
     quick_max_points: 3    # the /turnstile:quick fast-lane ceiling
 
 Switching `profile` mid-project is safe: review resolves each ticket's
 criteria per ticket (spec, then plan, then item note), so artifacts from
-both profiles coexist.
+both profiles coexist. Switching `cadence` to flow requires no active
+sprint -- archive the current one first (`/turnstile:sprint-plan` in flow
+mode offers exactly that step).
 
 ## Workflow
 
@@ -137,6 +142,12 @@ identical in both profiles:
                --(/turnstile:refine)------> plan approved --> ready
                --(/turnstile:sprint-plan)-> todo --> in_progress
                --(/turnstile:review, passes)--> done
+
+With `cadence: flow` there is no sprint step in either profile: `ready`
+items form a queue in the backlog and `/turnstile:next` pulls the top one
+onto the flow board (`sprint.yml` with a `mode: flow` marker -- same file,
+same invariants, never archived) as `todo`. Everything else -- work,
+review, quick, drop -- behaves identically in both cadences.
 
 Epic-sized ideas take a detour: `/turnstile:refine` records them as `type: epic`
 and `/turnstile:breakdown` splits them into user stories (and oversized stories
@@ -168,6 +179,7 @@ architecture, code, and brain notes all interconnect in Graph View:
       config.yml                        # optional settings (see Configuration)
       backlog.yml                       # unplanned work: idea -> ready (or dropped)
       sprint.yml                        # the current sprint -- always this filename
+                                        #   (in cadence: flow, the flow board: mode: flow)
       sprints/sprint-<N>.yml            # completed sprints, immutable archive
       epics/EP-<n>.md                   # one item note per epic
       user-stories/US-<n>.md            # one item note per user story
@@ -220,7 +232,7 @@ with a `turnstile/` directory, except the commit guard, which is safe anywhere):
 |---|---|---|
 | `remind.js` | UserPromptSubmit | Injects the full gate rules on the first prompt of a session (refreshed every 30 prompts so it survives context compaction) and a one-line anchor on every other prompt; flags hand-edited knowledge notes and stray link-hijacking notes (Obsidian click-artifacts that shadow ticket-id aliases). Session tracking lives in `turnstile/.remind-state.json`. |
 | `guard.js` | PreToolUse (all file + shell tools) | Blocks `git commit --no-verify` and Anthropic/Claude attribution lines; blocks any access to env files (`.env`, `.env.*`, `*.env`, `.envrc`) by path, glob, or shell command -- secrets are never read. |
-| `validate-board.js` | PostToolUse (Write/Edit) | Board invariants: valid statuses (incl. `dropped`), `C-<n>` ids, no duplicate ids, one `in_progress` item, one active sprint (`sprint.yml`; archives in `sprints/` must be completed), one live copy per item, hierarchy rules (`type`/`parent` values, epics stay in the backlog, epic -> story -> task nesting only, containers never `ready`). |
+| `validate-board.js` | PostToolUse (Write/Edit) | Board invariants: valid statuses (incl. `dropped`), `C-<n>` ids, no duplicate ids, one `in_progress` item, one active board (`sprint.yml`, sprint or `mode: flow`; archives in `sprints/` must be completed), one live copy per item, hierarchy rules (`type`/`parent` values, epics stay in the backlog, epic -> story -> task nesting only, containers never `ready`). |
 
 Run the hook tests with:
 

@@ -13,6 +13,12 @@ const path = require('node:path');
 // profile-specific invariants exist here.
 const ITEM_STATUSES = new Set(['todo', 'in_progress', 'review', 'done', 'dropped']);
 const SPRINT_STATUSES = new Set(['active', 'completed']);
+// cadence: flow (turnstile/config.yml) reuses sprint.yml with a mode: flow
+// header marker, so every sprint invariant (one active board, one
+// in_progress, one live copy) applies to the flow queue unchanged. Switching
+// cadence requires no active board of the other mode -- the skills enforce
+// that by archiving first; here both modes validate identically.
+const BOARD_MODES = new Set(['sprint', 'flow']);
 const ITEM_TYPES = new Set(['epic', 'story', 'task']);
 
 // Returns { sprintStatus, items: [{id, status, type, parent}], problems: [] }
@@ -37,7 +43,7 @@ function scanBoardFile(filePath, kind, label) {
       }
       continue;
     }
-    const fieldMatch = line.match(/^\s*(status|type|parent):\s*["']?(\S+?)["']?\s*$/);
+    const fieldMatch = line.match(/^\s*(status|type|parent|mode):\s*["']?(\S+?)["']?\s*$/);
     if (!fieldMatch) continue;
     const [, field, value] = fieldMatch;
     if (inItems && current) {
@@ -59,6 +65,10 @@ function scanBoardFile(filePath, kind, label) {
       sprintStatus = value;
       if (!SPRINT_STATUSES.has(value)) {
         problems.push(`${label}: sprint status "${value}" is invalid (allowed: active, completed)`);
+      }
+    } else if (!inItems && kind === 'sprint' && field === 'mode') {
+      if (!BOARD_MODES.has(value)) {
+        problems.push(`${label}: board mode "${value}" is invalid (allowed: ${[...BOARD_MODES].join(', ')})`);
       }
     }
   }
