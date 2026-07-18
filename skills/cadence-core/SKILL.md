@@ -1,10 +1,10 @@
 ---
 name: cadence-core
-description: Cadence's non-negotiable rules -- gate order, TDD, brain-first, commit and reply conventions. Auto-loads whenever any cadence skill is active.
+description: Turnstile's non-negotiable rules -- gate order, TDD, brain-first, commit and reply conventions. Auto-loads whenever any cadence skill is active.
 user-invocable: false
 ---
 
-# Cadence Core Rules
+# Turnstile Core Rules
 
 <important>
 - Never skip a gate: idea -> design approved -> spec approved -> ready -> todo -> in_progress -> review -> done. Each arrow requires the named approval or check to have actually happened, not been assumed. One sanctioned shortcut exists: /cadence:quick (trivial work and diagnosed bugs, 2 points max, criteria inline in the item note, one approval) -- it lands at todo or ready directly. Nothing else skips gates, and quick refuses work that deserves the full pipeline.
@@ -26,9 +26,9 @@ user-invocable: false
 
 ## Core values
 
-1. **Token economy.** Keep skill and prompt text concise. Do not re-read files already in the conversation. Dispatch an agent only when independence or isolation is structurally required -- cadence has exactly four agents for this reason: cadence-reviewer (independent judgment), cadence-coder (context-isolated implementation), brain-curator (cheap isolated note writing), pitch-agent (anchoring-free perspectives).
+1. **Token economy.** Keep skill and prompt text concise. Do not re-read files already in the conversation. Dispatch an agent only when independence or isolation is structurally required -- Turnstile has exactly five agents for this reason: cadence-reviewer (independent judgment), cadence-coder (context-isolated implementation), brain-curator (cheap isolated note writing), pitch-agent (anchoring-free perspectives), loop-runner (autonomous iteration).
 2. **Simplicity first.** Smallest viable file and field structure. No speculative abstraction, no unrequested features.
 3. **Anti-hallucination.** Verify any technical or factual claim not directly checkable in the current codebase (web search, cite the source) before asserting it. Below roughly 98% confidence, say so plainly instead of asserting.
-4. **No AI sloppiness.** Every markdown file cadence produces -- skills, design docs, specs, brain notes -- uses short declarative sentences, active voice, no filler, no hedge-padding, no emoji.
+4. **No AI sloppiness.** Every markdown file Turnstile produces -- skills, design docs, specs, brain notes -- uses short declarative sentences, active voice, no filler, no hedge-padding, no emoji.
 
 This skill is reference material only -- see the skill that is actually running for its steps and error handling.

@@ -1,9 +1,10 @@
 # Turnstile
 
-A gated, file-based agile workflow plugin for Claude Code. Turnstile tracks
-work on a YAML board, enforces hard approval gates so nothing skips ahead of
-its own readiness, and maintains a persistent, Obsidian-linked knowledge brain
-that survives across sessions.
+A gate-first workflow plugin for Claude Code. One ticket at a time, nothing
+ships without passing its gate: idea → design → spec → sprint → review → done.
+Turnstile tracks work on a YAML board, maintains a persistent Obsidian-linked
+knowledge brain across sessions, and drives autonomous goal loops when you need
+sustained iteration without manual steering.
 
 ## Requirements
 
@@ -17,7 +18,7 @@ In Claude Code:
 1. Run `/plugin`.
 2. Choose **Marketplaces** -> **Add marketplace**.
 3. Paste the repo link: `https://github.com/febradc-github/cadence-ai`
-4. Back in the plugin menu, install **cadence** from the `cadence-ai`
+4. Back in the plugin menu, install **turnstile** from the `cadence-ai`
    marketplace.
 
 ## Install (local development)
@@ -58,9 +59,29 @@ through their command wrapper or conversate's routing (via the Skill tool).
 | `/cadence:obsidian-graph` | Opens `cadence/` in Obsidian and points you at Graph View (Ctrl+G / Cmd+G). |
 | `/cadence:brain-init` | Bulk-documents every source file as a linked `cadence/code/` note (purpose, imports, exports, callers). Re-runnable; only adds missing notes. |
 
+## Loop runner
+
+Turnstile includes a goal-directed autonomous loop that lets Claude work
+toward a stated objective across repeated iterations without manual steering.
+Each iteration runs through four phases — ACT → OBSERVE → EVALUATE → DECIDE
+— and writes its outcome to `cadence/loops/<id>/state.json`, which the
+brain-vault integration can annotate with structured notes.
+
+| Command | Purpose |
+|---|---|
+| `/cadence:loop-start goal="..." success="..." [max-iterations=N]` | Initialises a loop run, asks whether to run autonomously or with manual confirmation between iterations, then drives the ACT/OBSERVE/EVALUATE/DECIDE cycle until the success condition is met, the iteration cap is reached, or an unrecoverable error occurs. |
+| `/cadence:loop-status <id>` | Renders the current phase, status, and full iteration history from `cadence/loops/<id>/state.json` in the terminal. |
+| `/cadence:loop-watch <id>` | Starts a local HTTP server and opens a browser dashboard that polls `/state` every second and renders the circuit animation live — four nodes at PLAN/RUN/CHECK/REPORT corners, a traveling cyan pulse, and a scrolling terminal log of iteration outputs. |
+
+Loop state is stored under `cadence/loops/<id>/` and is never touched by the
+board hooks, so loops run independently of sprint work. The `cadence-work`
+skill offers an optional loop mode when starting a ticket — enabling it wraps
+the implementation cycle in a loop run so progress is tracked and observable
+in the watch dashboard.
+
 ## Agents
 
-Four agents exist because each structurally requires isolation from the main
+Five agents exist because each structurally requires isolation from the main
 session; nothing else is agent-shaped.
 
 | Agent | Model | Role |
@@ -69,6 +90,7 @@ session; nothing else is agent-shaped.
 | `cadence-reviewer` | opus | Independent done-ness verdict for `/cadence:review`; judges only the criteria and the diff, read-only. |
 | `brain-curator` | haiku | Sole writer of the knowledge folders (`cadence/brain/`, `cadence/decisions/`, `cadence/architecture/`, `cadence/code/`); dispatched opportunistically when something worth remembering happens. |
 | `pitch-agent` | inherit | Anchoring-free idea pitches for `/cadence:brainstorm`'s panel: dispatched 2-3× in parallel with forced stances (minimalist, skeptic, scout) on epic-scale ideas or on request. Sees the idea summary, never the dialogue. Read-only. |
+| `loop-runner` | inherit | Executes one iteration of the ACT/OBSERVE/EVALUATE/DECIDE loop, writes outcomes to `state.json`, optionally dispatches `brain-curator` on DECIDE, and reports whether to continue. Dispatched repeatedly by `/cadence:loop-start`. |
 
 ## Workflow
 
@@ -98,7 +120,7 @@ instead of requiring each command to be typed by hand.
 
 ## Data
 
-Cadence reads and writes a `cadence/` folder in your project repo. The whole
+Turnstile reads and writes a `cadence/` folder in your project repo. The whole
 folder is an Obsidian vault; every markdown file in it follows one shared
 note format (frontmatter + wikilinks), so items, designs, specs, decisions,
 architecture, code, and brain notes all interconnect in Graph View:
@@ -116,9 +138,10 @@ architecture, code, and brain notes all interconnect in Graph View:
       decisions/adr-<NNN>-<slug>.md     # why it is shaped that way (ADRs)
       brain/*.md, brain/moc-<topic>.md  # domain/process knowledge, MOCs
       code/<path-slug>.md               # one note per source file -- purpose, exports, imports, callers
+      loops/<id>/state.json             # live loop state (phase, status, history, config)
       .brain-state.json                 # hand-edit tracking baseline
 
-Ticket ids are `C-<n>` -- the `C` simply means *cadence*, one shared counter
+Ticket ids are `C-<n>` -- a single shared counter
 for every item so a number is minted exactly once. `<n>` is that same number:
 ticket `C-7` maps to `EP-7`/`US-7`/`TK-7` (by type) plus `DS-7` and `SP-7`,
 so one number traces a ticket across every folder.
@@ -208,11 +231,11 @@ broad query on a large vault cannot flood the context window.
 
 ## Usage
 
-The golden path through one ticket, gate by gate. `Cadence` writes to
+The golden path through one ticket, gate by gate. `Turnstile` writes to
 `cadence/` (the board and the vault) and dispatches agents for isolated
-work; `User` only ever talks to `Cadence`.
+work; `User` only ever talks to `Turnstile`.
 
-    User                                    Cadence
+    User                                    Turnstile
       |                                        |
       |--- /cadence:brainstorm --------------->|
       |                                        |  (dialogue only, no writes)

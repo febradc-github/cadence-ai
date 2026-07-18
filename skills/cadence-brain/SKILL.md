@@ -4,7 +4,7 @@ description: Vault layout, the shared note format, and the check-the-brain-first
 user-invocable: false
 ---
 
-# Cadence Vault Rules
+# Turnstile Vault Rules
 
 <important>
 - Before starting new work, search the vault for notes related to the topic -- prefer the cadence-brain MCP tools (search_notes, get_related) over raw greps when available; they index every markdown note in cadence/. Surface what you find, including conflicting notes, before proceeding -- never silently pick a side.

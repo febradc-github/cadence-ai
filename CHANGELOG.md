@@ -122,7 +122,7 @@ worktree), not estimated.
 - README: replaced the `Design` section (links only) with a `Usage` section
   -- an ASCII sequence diagram of the golden path through one ticket
   (brainstorm -> refine -> spec -> sprint-plan -> work -> review), showing
-  where Cadence writes to `cadence/` and dispatches agents. Docs only, no
+  where Turnstile writes to `cadence/` and dispatches agents. Docs only, no
   functional change.
 
 ## 0.16.0 — 2026-07-10

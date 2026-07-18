@@ -1,4 +1,4 @@
-# Cadence note format reference
+# Turnstile note format reference
 
 Read this before writing or restructuring any vault note. Loaded on demand by
 cadence-brain; not needed for searching or reading.
@@ -73,7 +73,7 @@ reminder flags any unresolved target left behind.
 Clicking an unresolved-looking wikilink in Obsidian offers to create the
 missing note -- accepting mints an empty file (by default at the vault root)
 named exactly like the link target, which then captures every matching link.
-Cadence never writes vault-root notes, so any root-level file is a stray; so
+Turnstile never writes vault-root notes, so any root-level file is a stray; so
 is a duplicate basename or a file named exactly like another note's alias.
 The every-turn reminder and the `list_stray_notes` MCP tool flag all three.
 Fresh vaults scaffolded by `/cadence:install-obsidian` point Obsidian's
