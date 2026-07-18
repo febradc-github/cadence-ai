@@ -55,6 +55,21 @@ You may never write or edit source files yourself. For any code change in the AC
 
 10. Write the DECIDE phase entry with the chosen outcome as both `observation` and `decision`.
 
+11. Dispatch `brain-curator` to record this DECIDE outcome. Pass:
+    - The loop id and current iteration number.
+    - The goal string.
+    - The DECIDE observation (what was decided and why).
+    - The decision value (`continue` | `success` | `max_iterations_reached` | `error`).
+    - A request to write the note to `cadence/brain/` as type `domain`, named `loop-<id>-iter-<n>`, tagged `loop/decisions`.
+    - The note body must capture: goal, phase=DECIDE, observation, decision, and iteration count.
+    - The expected note name follows the pattern `loop-<id>-iter-<n>` (e.g. `loop-L-1721000000-iter-2`).
+
+12. After brain-curator confirms the note was written, record it in state.json:
+    ```js
+    const { addBrainNote } = require('<pluginRoot>/scripts/loop-state.js');
+    addBrainNote(id, `loop-${id}-iter-${iteration}`, projectRoot);
+    ```
+
 ---
 
 ## Dispatching cadence-systematic-debugger on error
@@ -74,7 +89,7 @@ When EVALUATE yields `error`:
 
 ## Writing phase entries
 
-Use the `loop-state.js` script directly from the project root. The script path is always `<projectRoot>/cadence-ai/scripts/loop-state.js` relative to the plugin, but pass it as an absolute path. Alternatively, require it inline:
+Use the `loop-state.js` script directly from the project root. The script path is always `<pluginRoot>/scripts/loop-state.js`; pass it as an absolute path. Alternatively, require it inline:
 
 ```js
 const { writePhase } = require('<pluginRoot>/scripts/loop-state.js');

@@ -13,6 +13,7 @@
 //   writePhase(id, iteration, phase, observation, decision, projectRoot)
 //   finalizeLoop(id, status, projectRoot)
 //   readState(id, projectRoot)
+//   addBrainNote(id, noteName, projectRoot)
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -80,6 +81,7 @@ function initState(id, goal, success, maxIterations, mode, projectRoot) {
     iteration: 0,
     phase: null,
     history: [],
+    brain_notes: [],
     startedAt: new Date().toISOString(),
   };
 
@@ -151,4 +153,18 @@ function readState(id, projectRoot) {
   return readRaw(id, projectRoot);
 }
 
-module.exports = { initState, writePhase, finalizeLoop, readState };
+/**
+ * Append a brain note name to the loop's brain_notes array in state.json.
+ * Called after brain-curator has written a note for a DECIDE outcome.
+ *
+ * @param {string} id          - Loop identifier.
+ * @param {string} noteName    - The note name (e.g. 'loop-L-1-iter-1'), without path or extension.
+ * @param {string} projectRoot - Absolute path to the project root.
+ */
+function addBrainNote(id, noteName, projectRoot) {
+  const state = readRaw(id, projectRoot);
+  state.brain_notes.push(noteName);
+  writeRaw(id, projectRoot, state);
+}
+
+module.exports = { initState, writePhase, finalizeLoop, readState, addBrainNote };

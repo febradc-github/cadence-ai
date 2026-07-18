@@ -10,7 +10,7 @@ user-invocable: false
 <important>
 - Never invoke `loop-runner` except from this skill. No other skill or user message should dispatch it directly.
 - Never write or edit source files from this skill. ACT-phase code changes are always delegated to `cadence-coder` via `loop-runner`.
-- Brain-vault writes are out of scope for this skill; that is handled by C-3.
+- Prior-run brain notes are queried here and passed to loop-runner as context.
 - Visual console rendering is out of scope; that is handled by C-4.
 </important>
 
@@ -55,7 +55,17 @@ Tell the user:
 > Loop `<id>` initialised. Goal: <goal>. Success: <success>. Max iterations: <N>. Mode: <mode>.
 > State file: cadence/loops/<id>/state.json
 
-### 5. Run iterations
+### 5. Query prior brain notes
+
+Use the `search_notes` MCP tool to find any brain notes from previous runs that match the current goal string:
+
+```
+search_notes(query: goal)
+```
+
+If matching notes are returned, collect them as `priorContext`. On the first dispatch of `loop-runner` (iteration 1), include `priorContext` in the prompt so the runner has background from earlier runs. If no notes match, `priorContext` is empty and no change is made to the first dispatch.
+
+### 6. Run iterations
 
 Loop from `iteration = 1` to `maxIterations` (inclusive):
 
@@ -76,7 +86,7 @@ b. Inspect the runner's report:
 > Iteration <N> complete. Decision: <decision>. Continue to iteration <N+1>? [y/n]
 If the user says `n`, call `finalizeLoop(id, 'success', projectRoot)` (treating user abort as a clean stop) and report what was accomplished.
 
-### 6. Final report
+### 7. Final report
 
 After the loop ends, tell the user:
 - The terminal status (`success` | `max_iterations_reached` | `error`).

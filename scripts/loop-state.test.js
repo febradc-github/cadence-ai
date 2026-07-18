@@ -5,7 +5,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
 
-const { initState, writePhase, finalizeLoop, readState } = require('./loop-state.js');
+const { initState, writePhase, finalizeLoop, readState, addBrainNote } = require('./loop-state.js');
 
 function makeTmp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'loop-state-test-'));
@@ -181,4 +181,61 @@ test('readState throws when state.json is corrupt JSON', () => {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'state.json'), 'not json');
   assert.throws(() => readState('L-bad', root), /parse|JSON|invalid/i);
+});
+
+// addBrainNote tests
+
+test('initState includes brain_notes as an empty array in the initial state', () => {
+  const root = makeTmp();
+  initState('L-40', 'goal', 'success', 5, 'autonomous', root);
+
+  const state = readState('L-40', root);
+  assert.ok(Object.prototype.hasOwnProperty.call(state, 'brain_notes'), 'brain_notes field should exist');
+  assert.deepEqual(state.brain_notes, []);
+});
+
+test('addBrainNote appends a note name to brain_notes in state.json', () => {
+  const root = makeTmp();
+  initState('L-50', 'goal', 'success', 5, 'autonomous', root);
+
+  addBrainNote('L-50', 'loop-L-50-iter-1', root);
+
+  const state = readState('L-50', root);
+  assert.deepEqual(state.brain_notes, ['loop-L-50-iter-1']);
+});
+
+test('addBrainNote appends multiple note names in order', () => {
+  const root = makeTmp();
+  initState('L-51', 'goal', 'success', 5, 'autonomous', root);
+
+  addBrainNote('L-51', 'loop-L-51-iter-1', root);
+  addBrainNote('L-51', 'loop-L-51-iter-2', root);
+  addBrainNote('L-51', 'loop-L-51-iter-3', root);
+
+  const state = readState('L-51', root);
+  assert.deepEqual(state.brain_notes, [
+    'loop-L-51-iter-1',
+    'loop-L-51-iter-2',
+    'loop-L-51-iter-3',
+  ]);
+});
+
+test('addBrainNote preserves all other state fields', () => {
+  const root = makeTmp();
+  initState('L-52', 'my goal', 'done when green', 3, 'manual', root);
+  writePhase('L-52', 1, 'ACT', 'did something', null, root);
+
+  addBrainNote('L-52', 'loop-L-52-iter-1', root);
+
+  const state = readState('L-52', root);
+  assert.equal(state.id, 'L-52');
+  assert.equal(state.goal, 'my goal');
+  assert.equal(state.mode, 'manual');
+  assert.equal(state.history.length, 1);
+  assert.deepEqual(state.brain_notes, ['loop-L-52-iter-1']);
+});
+
+test('addBrainNote throws when state.json does not exist', () => {
+  const root = makeTmp();
+  assert.throws(() => addBrainNote('L-99', 'loop-L-99-iter-1', root), /not found|ENOENT/i);
 });
