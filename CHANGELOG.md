@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- New per-project settings file `turnstile/config.yml`, read by the
+  dependency-free `scripts/config.js` (CLI: one JSON line). Missing file
+  means defaults; unknown keys are ignored and invalid values fall back to
+  defaults, each with a warning the reading skill surfaces once — bad
+  config never breaks the pipeline.
+- `profile: solo | full` (default `full`). Solo collapses the design and
+  spec gates for leaf items into one plan artifact —
+  `turnstile/plans/PL-<n>.md`, design and acceptance criteria together —
+  written by `/turnstile:refine`; one approval marks the item `ready`.
+  Epics use the full breakdown pipeline in both profiles. `/turnstile:spec`
+  explains instead of failing when a plan already covers the item.
+  `/turnstile:review` resolves criteria per ticket (SP → PL → item note),
+  so switching profile mid-project is safe and mixed artifacts coexist.
+  The review gate is unchanged in both profiles.
+
 ## 0.21.0 — 2026-07-18
 
 - Renamed plugin display name to **Turnstile** (`plugin.json`, `marketplace.json`, README).

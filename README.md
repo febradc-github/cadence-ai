@@ -55,9 +55,9 @@ through their command wrapper or conversate's routing (via the Skill tool).
 |---|---|
 | `/turnstile:conversate [message]` | Casual entry point; classifies intent and directly invokes the right skill. |
 | `/turnstile:brainstorm [idea]` | Loose, exploratory idea-shaping. No file writes. Hands off to refine. |
-| `/turnstile:refine [idea]` | Gap-closing dialogue; writes a design doc for approval. Epic-sized ideas are recorded as epics and handed to breakdown. |
+| `/turnstile:refine [idea]` | Gap-closing dialogue; writes a design doc for approval (in `profile: solo`, a single plan artifact whose approval marks the item `ready`). Epic-sized ideas are recorded as epics and handed to breakdown. |
 | `/turnstile:breakdown [id]` | Decomposes an epic into user stories, or an oversized story into tasks; requires approval. |
-| `/turnstile:spec [id]` | Turns an approved design into a checkable spec; requires approval. |
+| `/turnstile:spec [id]` | Turns an approved design into a checkable spec; requires approval. (`profile: solo`: the refine plan already covered this -- explains and points onward.) |
 | `/turnstile:sprint-plan` | Starts a new sprint; archives the finished one; recommends which ready items to pull in and proposes a goal; rolls over unfinished work. |
 | `/turnstile:quick [description]` | Fast lane: trivial work or a diagnosed bug becomes a small task in the current sprint after one approval -- no design doc, no spec. 2 points max. |
 | `/turnstile:drop [id] [reason]` | Cancels a ticket: status `dropped` with a recorded reason. History, not deletion. |
@@ -104,11 +104,36 @@ session; nothing else is agent-shaped.
 | `pitch-agent` | inherit | Anchoring-free idea pitches for `/turnstile:brainstorm`'s panel: dispatched 2-3× in parallel with forced stances (minimalist, skeptic, scout) on epic-scale ideas or on request. Sees the idea summary, never the dialogue. Read-only. |
 | `loop-runner` | inherit | Executes one iteration of the ACT/OBSERVE/EVALUATE/DECIDE loop, writes outcomes to `state.json`, optionally dispatches `brain-curator` on DECIDE, and reports whether to continue. Dispatched repeatedly by `/turnstile:loop-start`. |
 
+## Configuration
+
+Optional per-project settings in `turnstile/config.yml`; a missing file (or
+key) means the default, and invalid values fall back to the default with a
+surfaced warning -- bad config never breaks the pipeline:
+
+    profile: full          # solo | full -- solo merges design+spec into one
+                           # approved plan artifact per leaf item
+
+Switching `profile` mid-project is safe: review resolves each ticket's
+criteria per ticket (spec, then plan, then item note), so artifacts from
+both profiles coexist.
+
 ## Workflow
+
+Full profile (the default):
 
     rough idea --(/turnstile:brainstorm)--> shaped idea
                --(/turnstile:refine)------> design approved
                --(/turnstile:spec)--------> spec approved --> ready
+               --(/turnstile:sprint-plan)-> todo --> in_progress
+               --(/turnstile:review, passes)--> done
+
+Solo profile collapses the two entrance gates into one -- refine writes a
+single plan artifact (`plans/PL-<n>.md`, design and acceptance criteria
+together) and one approval marks the item `ready`; the review gate is
+identical in both profiles:
+
+    rough idea --(/turnstile:brainstorm)--> shaped idea
+               --(/turnstile:refine)------> plan approved --> ready
                --(/turnstile:sprint-plan)-> todo --> in_progress
                --(/turnstile:review, passes)--> done
 
@@ -138,14 +163,16 @@ note format (frontmatter + wikilinks), so items, designs, specs, decisions,
 architecture, code, and brain notes all interconnect in Graph View:
 
     turnstile/
+      config.yml                        # optional settings (see Configuration)
       backlog.yml                       # unplanned work: idea -> ready (or dropped)
       sprint.yml                        # the current sprint -- always this filename
       sprints/sprint-<N>.yml            # completed sprints, immutable archive
       epics/EP-<n>.md                   # one item note per epic
       user-stories/US-<n>.md            # one item note per user story
       tasks/TK-<n>.md                   # one item note per task
-      designs/DS-<n>.md                 # design doc per item
-      specs/SP-<n>.md                   # spec per leaf item
+      designs/DS-<n>.md                 # design doc per item (profile: full)
+      specs/SP-<n>.md                   # spec per leaf item (profile: full)
+      plans/PL-<n>.md                   # merged design+spec per leaf item (profile: solo)
       architecture/AR-<topic>.md        # how the system is shaped
       decisions/adr-<NNN>-<slug>.md     # why it is shaped that way (ADRs)
       brain/*.md, brain/moc-<topic>.md  # domain/process knowledge, MOCs
@@ -155,8 +182,9 @@ architecture, code, and brain notes all interconnect in Graph View:
 
 Ticket ids are `C-<n>` -- a single shared counter
 for every item so a number is minted exactly once. `<n>` is that same number:
-ticket `C-7` maps to `EP-7`/`US-7`/`TK-7` (by type) plus `DS-7` and `SP-7`,
-so one number traces a ticket across every folder.
+ticket `C-7` maps to `EP-7`/`US-7`/`TK-7` (by type) plus `DS-7` and `SP-7`
+(or `PL-7` in the solo profile), so one number traces a ticket across every
+folder.
 
 The YAML board holds tracking fields only (id, title, type, parent, status,
 points, assignee, carryovers, notes) -- descriptions live in the item notes

@@ -77,3 +77,10 @@ function loadConfig(cadenceDir) {
 }
 
 module.exports = { loadConfig, DEFAULTS };
+
+// CLI for skills: node scripts/config.js [cadenceDir] prints one JSON line
+// {config, warnings}. cadenceDir defaults to ./turnstile under the cwd.
+if (require.main === module) {
+  const dir = process.argv[2] || path.join(process.cwd(), 'turnstile');
+  process.stdout.write(JSON.stringify(loadConfig(dir)) + '\n');
+}

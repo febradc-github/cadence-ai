@@ -7,6 +7,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+// profile: solo (turnstile/config.yml) changes which artifacts the skills
+// write (PL-<n> plans instead of DS/SP), not the board's states -- solo items
+// still move idea/ready -> todo -> in_progress -> review -> done, so no
+// profile-specific invariants exist here.
 const ITEM_STATUSES = new Set(['todo', 'in_progress', 'review', 'done', 'dropped']);
 const SPRINT_STATUSES = new Set(['active', 'completed']);
 const ITEM_TYPES = new Set(['epic', 'story', 'task']);

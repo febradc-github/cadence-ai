@@ -9,6 +9,7 @@ user-invocable: false
 
 <important>
 - Refuse to run if turnstile/backlog.yml has no item with this id and status: idea, or if no design doc exists for it (turnstile/designs/DS-<n>.md, or a legacy turnstile/designs/<id>*.md). Tell the user to run /turnstile:refine first.
+- Solo profile (run `node ${CLAUDE_PLUGIN_ROOT}/scripts/config.js`; surface warnings once): if the item has a plan (turnstile/plans/PL-<n>.md), explain that in profile: solo refine's approved plan replaces the spec -- the item is already ready; point to /turnstile:sprint-plan and stop. An item with a design doc but no plan was refined under profile: full: proceed normally -- mixed artifacts from a profile switch coexist, review resolves criteria per ticket (SP, then PL, then item note).
 - Refuse epics and containers (items with type: epic, or items another item names as parent). Only leaf stories and tasks get spec'd; direct the user to /turnstile:breakdown and to spec the children instead.
 - Do not flip the item's status to ready until the user has explicitly approved the spec file -- keep revising on requested changes; never flip on a conditional approval.
 - Design and spec are always separate files. Never skip writing the spec file and just reuse the design doc.

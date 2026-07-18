@@ -24,21 +24,23 @@ user-invocable: false
 shared note format, so everything interconnects in Graph View:
 
     turnstile/
+      config.yml                   # settings: profile, cadence, capture, quick_max_points
       backlog.yml                  # unplanned work (idea/ready/dropped)
       sprint.yml                   # the current sprint -- always this name
       sprints/sprint-<N>.yml       # completed sprints, immutable archive
       epics/EP-<n>.md              # one item note per epic
       user-stories/US-<n>.md       # one item note per user story
       tasks/TK-<n>.md              # one item note per task
-      designs/DS-<n>.md            # design doc per item
-      specs/SP-<n>.md              # spec per leaf item
+      designs/DS-<n>.md            # design doc per item (profile: full)
+      specs/SP-<n>.md              # spec per leaf item (profile: full)
+      plans/PL-<n>.md              # merged design+spec per leaf item (profile: solo)
       architecture/AR-<topic>.md   # how the system is shaped
       decisions/adr-<NNN>-<slug>.md# why it is shaped that way (ADRs)
       brain/<topic>.md, moc-*.md   # domain/process knowledge, MOCs
       code/<path-slug>.md          # one note per source file (curator-written)
 
 Naming: `<n>` is the ticket's board number -- ticket `C-7` maps to `EP-7`,
-`US-7`, or `TK-7` (by type) plus `DS-7` and `SP-7`. One glance at a filename
+`US-7`, or `TK-7` (by type) plus `DS-7` and `SP-7` (or `PL-7` in solo). One glance at a filename
 gives kind and ticket; one number traces a ticket across every folder. Typed
 prefixes keep basenames unique vault-wide, which Obsidian's filename-based
 link resolution requires. `<NNN>` is a zero-padded ADR sequence

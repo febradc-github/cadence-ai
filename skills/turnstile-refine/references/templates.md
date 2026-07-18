@@ -41,6 +41,45 @@ Read when refine reaches its write steps. `<n>` is the ticket number from
     ## Assignee
     <claude|human>
 
+## Plan (solo profile) — turnstile/plans/PL-<n>.md
+
+Solo leaf items get this single artifact instead of DS-<n> + SP-<n>. Same
+sections as the design doc, but its Acceptance criteria section is the one
+/turnstile:review checks — write them as concrete, checkable statements.
+
+    ---
+    type: plan
+    tags: []
+    created: <today, YYYY-MM-DD>
+    updated: <today, YYYY-MM-DD>
+    related: ["[[<US-n|TK-n>]]"]
+    sources: []
+    ---
+
+    # <id>: <title> -- Plan
+
+    ## Problem
+    <problem statement from the dialogue>
+
+    ## Architecture
+    <same rules as the design doc's Architecture section>
+
+    ## Approach
+    <the approach agreed on>
+
+    ## Trade-offs considered
+    <alternatives discussed and why not chosen, or "None discussed.">
+
+    ## Acceptance criteria
+    - <concrete, checkable criterion 1>
+    - <criterion 2>
+
+    ## Estimate
+    <points> points
+
+    ## Assignee
+    <claude|human>
+
 ## Backlog entry — appended to turnstile/backlog.yml items
 
     - id: <id>
@@ -51,9 +90,11 @@ Read when refine reaches its write steps. `<n>` is the ticket number from
       created: <today, YYYY-MM-DD>
       updated: <today, YYYY-MM-DD>
 
-For an epic-sized item, add `type: epic` after `title`. The board holds
-tracking fields only — the description lives in the item note, the criteria
-in the design doc and later the spec. Never copy prose into YAML.
+For an epic-sized item, add `type: epic` after `title`. A solo-profile leaf
+item enters with `status: ready` instead of `idea` — its plan approval was
+the gate. The board holds tracking fields only — the description lives in
+the item note, the criteria in the design doc and later the spec (or the
+solo plan). Never copy prose into YAML.
 
 ## Item note — turnstile/epics/EP-<n>.md (epic) or turnstile/user-stories/US-<n>.md
 
@@ -71,6 +112,9 @@ in the design doc and later the spec. Never copy prose into YAML.
     <one-paragraph description>
 
     - Design: [[DS-<n>]]
+
+For a solo-profile leaf item, the link line is `- Plan: [[PL-<n>]]` and the
+frontmatter `related` entry is `"[[PL-<n>]]"` instead.
 
 Aliases make the quick switcher and search_notes find the note by board id or
 title — but aliases never resolve raw wikilinks, so links always use the
