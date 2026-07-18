@@ -4,4 +4,4 @@ argument-hint: "[id]"
 disable-model-invocation: true
 ---
 
-Use the Skill tool to invoke the `cadence-breakdown` skill, passing `$ARGUMENTS` and the rest of this message unchanged.
+Use the Skill tool to invoke the `turnstile-breakdown` skill, passing `$ARGUMENTS` and the rest of this message unchanged.

@@ -2,7 +2,7 @@
 'use strict';
 // Manages persistent loop state for cadence-ai's loop runner.
 //
-// State lives at: <projectRoot>/cadence/loops/<id>/state.json
+// State lives at: <projectRoot>/turnstile/loops/<id>/state.json
 //
 // The projectRoot is passed explicitly so the module can be used from tests
 // without touching the real working directory.  When called from hooks or
@@ -51,14 +51,14 @@ function writeRaw(id, projectRoot, state) {
 }
 
 /**
- * Initialise a new loop run and write cadence/loops/<id>/state.json.
+ * Initialise a new loop run and write turnstile/loops/<id>/state.json.
  *
  * @param {string} id            - Unique loop identifier (e.g. 'L-1' or a UUID).
  * @param {string} goal          - What the loop is trying to achieve.
  * @param {string} success       - Human-readable condition that ends the loop successfully.
  * @param {number} maxIterations - Hard cap on iterations; must be a positive integer.
  * @param {string} mode          - 'autonomous' or 'manual'.
- * @param {string} projectRoot   - Absolute path to the project root (contains cadence/).
+ * @param {string} projectRoot   - Absolute path to the project root (contains turnstile/).
  */
 function initState(id, goal, success, maxIterations, mode, projectRoot) {
   if (!id || typeof id !== 'string' || id.trim() === '') {

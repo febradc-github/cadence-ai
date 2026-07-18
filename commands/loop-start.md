@@ -4,4 +4,4 @@ argument-hint: "goal=\"...\" success=\"...\" [max-iterations=N]"
 disable-model-invocation: true
 ---
 
-Use the Skill tool to invoke the `cadence-loop-start` skill, passing `$ARGUMENTS` and the rest of this message unchanged.
+Use the Skill tool to invoke the `turnstile-loop-start` skill, passing `$ARGUMENTS` and the rest of this message unchanged.

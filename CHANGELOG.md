@@ -30,7 +30,7 @@ session).
   bodies into references loaded on demand: refine and breakdown design/
   item-note/backlog templates, the sprint file template, the quick item
   note, the spec template, and brain-curator's code-note format + bulk
-  mode (now `skills/cadence-brain/references/curator-code-notes.md`,
+  mode (now `skills/turnstile-brain/references/curator-code-notes.md`,
   loaded via `${CLAUDE_PLUGIN_ROOT}` only when a code note is written).
   Reference-workflow invoked bodies: 42,848 -> 30,255 chars (−29.4%);
   per-invoke bodies of the write-heavy skills drop 45–55% (e.g. refine
@@ -52,7 +52,7 @@ session).
   or the rules back unprompted, and never recap a rendered table in prose.
   Closes the output-token side of the token-economy value: 0.18.0 cut what
   the plugin injects into the context window; this constrains what the
-  model says back. One line in cadence-core covers every skill, since core
+  model says back. One line in turnstile-core covers every skill, since core
   auto-loads whenever any cadence skill is active.
 - Discoverability: the GitHub repo now carries 14 topics (claude-code,
   claude-code-plugin, agile-workflow, obsidian, sprint-planning, ...) so
@@ -72,7 +72,7 @@ worktree), not estimated.
   80.1% over 100 turns (65,100 -> 12,972). Total plugin-emitted context falls
   27% (30 turns) to 47% (100 turns). Without a session id on stdin the hook
   falls back to the old always-full behavior. State lives in
-  `cadence/.remind-state.json` (pruned to 20 sessions).
+  `turnstile/.remind-state.json` (pruned to 20 sessions).
 - The reminder's vault health checks (hand-edits, strays, unresolved links)
   now share one vault load via the new `vaultAlerts` helper instead of three
   separate full-vault reads per prompt.
@@ -80,9 +80,9 @@ worktree), not estimated.
   reports `total`/`truncated`, so a broad query on a large vault cannot flood
   the context window. MCP tool descriptions trimmed ~45% with the same
   semantics.
-- `cadence-brain` moved its note-format reference (shared frontmatter, per-
+- `turnstile-brain` moved its note-format reference (shared frontmatter, per-
   kind rules, stray handling, legacy paths) to
-  `skills/cadence-brain/references/note-format.md`, loaded only when a note
+  `skills/turnstile-brain/references/note-format.md`, loaded only when a note
   is about to be written; an `<important>` rule mandates reading it before
   any note write. The auto-loaded body shrinks ~48% with no rule dropped.
 - The brain MCP server version now tracks plugin.json instead of a hardcoded
@@ -97,39 +97,39 @@ worktree), not estimated.
 
 ## 0.17.1 — 2026-07-13
 
-- Fix: `cadence-conversate` was not reliably checking `cadence/code/` before
+- Fix: `turnstile-conversate` was not reliably checking `turnstile/code/` before
   answering ad-hoc code questions -- verified live in a brand-new session
   with 0.17.0 installed, the note-then-verify-source procedure was skipped
   entirely in favor of Grep/Read. Root cause: the rule lived only as prose
   inside a 10-item case list, competing with a strong default habit. Fix:
   promoted a short, imperative version of the rule into the `<important>`
   block at the top of the skill (the pattern that already makes the other
-  conversate gating rules and `cadence-brain`'s own "check the brain first"
+  conversate gating rules and `turnstile-brain`'s own "check the brain first"
   mandate stick); the detailed procedure stays in the case list unchanged.
 
 ## 0.17.0 — 2026-07-13
 
-- `cadence-conversate` now checks `cadence/code/` before answering an ad-hoc
+- `turnstile-conversate` now checks `turnstile/code/` before answering an ad-hoc
   "what does this code do" question: read the note, then read the source
   file its alias points to, and answer from the file if the two have
   drifted apart. On drift, conversate dispatches `brain-curator`
   (opportunistic, single file) to correct the note -- it never edits a
-  `cadence/code/` note itself. Missing notes fall back to Grep/Read as
-  before; conversate never backfills coverage, that stays `/cadence:brain-init`'s job.
+  `turnstile/code/` note itself. Missing notes fall back to Grep/Read as
+  before; conversate never backfills coverage, that stays `/turnstile:brain-init`'s job.
 
 ## 0.16.1 — 2026-07-10
 
 - README: replaced the `Design` section (links only) with a `Usage` section
   -- an ASCII sequence diagram of the golden path through one ticket
   (brainstorm -> refine -> spec -> sprint-plan -> work -> review), showing
-  where Turnstile writes to `cadence/` and dispatches agents. Docs only, no
+  where Turnstile writes to `turnstile/` and dispatches agents. Docs only, no
   functional change.
 
 ## 0.16.0 — 2026-07-10
 
-- New `/cadence:brain-init`: bulk-bootstraps code-level documentation. Every
+- New `/turnstile:brain-init`: bulk-bootstraps code-level documentation. Every
   source file (git ls-files, source-extension allowlist) gets a
-  `cadence/code/<path-slug>.md` note -- purpose, exports, imports, callers --
+  `turnstile/code/<path-slug>.md` note -- purpose, exports, imports, callers --
   written by parallel brain-curator dispatches (model overridden to sonnet;
   grep-verified connections, no parser; at most 4 in flight). Reruns are
   additive: documented files are skipped, notes for deleted files are removed
@@ -159,29 +159,29 @@ worktree), not estimated.
   the attempt is stopped before it happens. Wildcards (`cat .env*`,
   `**/*.env`) are caught; look-alikes (`environment.md`, `.venv/`,
   `$NODE_ENV`, `env-check.test.js`) are not blocked. The rule is also
-  re-injected every turn by the reminder and stated in cadence-core and
-  cadence-coder: secrets are never read -- ask the user for config values.
+  re-injected every turn by the reminder and stated in turnstile-core and
+  turnstile-coder: secrets are never read -- ask the user for config values.
 
 ## 0.13.0 — 2026-07-04
 
 - New `pitch-agent` (fourth cadence agent): anchoring-free idea pitches for
-  `/cadence:brainstorm`. On epic-scale ideas (or on request) brainstorm
+  `/turnstile:brainstorm`. On epic-scale ideas (or on request) brainstorm
   convenes a panel — three parallel dispatches with forced stances
   (minimalist: smallest viable version; skeptic: why not, checked against
   recorded ADRs; scout: prior art from the vault and web) — then synthesizes
   the pitches into 2-3 distinct directions for the user to pick from.
   Panelists get the idea summary and vault findings, never the dialogue
   transcript: an unanchored take is the point, same isolation rationale as
-  cadence-reviewer. The panel is gated (no panel for trivial ideas), pitches
+  turnstile-reviewer. The panel is gated (no panel for trivial ideas), pitches
   are capped at 150 words, convergent pitches are reported honestly rather
   than dressed up as disagreement, and rejected directions ride the refine
   handoff into the decision trail.
 
 ## 0.12.0 — 2026-07-03
 
-- Stable sprint board: the current sprint always lives at `cadence/sprint.yml`
+- Stable sprint board: the current sprint always lives at `turnstile/sprint.yml`
   (with a `number` field); completed sprints are archived immutably to
-  `cadence/sprints/sprint-<N>.yml` by sprint-plan, which also migrates legacy
+  `turnstile/sprints/sprint-<N>.yml` by sprint-plan, which also migrates legacy
   root `sprint-N.yml` files. Two fixed filenames answer "what's waiting"
   (backlog.yml) and "what's happening" (sprint.yml); archives feed velocity.
 - Slim YAML: board entries now carry tracking fields only (id, title, type,
@@ -189,7 +189,7 @@ worktree), not estimated.
   the item notes, acceptance criteria in the specs — the spec-to-backlog
   verbatim-copy rule is gone, eliminating that drift class. Legacy long
   fields are ignored and removed opportunistically.
-- New `/cadence:quick`: the fast lane. Trivial work (≤2 points, no design
+- New `/turnstile:quick`: the fast lane. Trivial work (≤2 points, no design
   questions) or a diagnosed bug becomes a task/story with inline acceptance
   criteria in its item note — no design doc, no spec, one approval — added to
   the current sprint (`added_mid_sprint: true`) or as `ready` backlog when no
@@ -199,7 +199,7 @@ worktree), not estimated.
   unrelated) creates a quick bug task that runs right after — starting it
   immediately when nothing is in progress. Closes the hole where bug fixes
   ended as unreviewed, uncommitted changes; the one-in_progress rule stands.
-- New `/cadence:drop`: cancellation with a paper trail. Sets `status: dropped`
+- New `/turnstile:drop`: cancellation with a paper trail. Sets `status: dropped`
   with a recorded reason (cascading over children after confirmation) instead
   of hand-deleting YAML; dropped items render as cancelled on the board and
   parent rollups ignore them.
@@ -249,14 +249,14 @@ worktree), not estimated.
     empty/has-content and what it shadows.
   - The every-turn reminder runs the same check and instructs cleanup: delete
     empty strays, fold a non-empty stray's content into the real note first.
-  - `/cadence:install-obsidian` now scaffolds `app.json` with the new-note
+  - `/turnstile:install-obsidian` now scaffolds `app.json` with the new-note
     default pointed at `brain/`, so accidental creations land in hand-edit-
     tracked territory instead of the root (existing vaults are untouched;
     the detection layers cover them).
 
 ## 0.10.0 — 2026-07-03
 
-- The whole `cadence/` folder is now one interconnected Obsidian vault. Every
+- The whole `turnstile/` folder is now one interconnected Obsidian vault. Every
   markdown artifact follows the shared brain note format (frontmatter with
   `type`/`tags`/`aliases`/`related`, wikilinks) and lives in a typed folder:
   `epics/`, `user-stories/`, `tasks/` (item notes, named `C-<n>-<slug>.md`),
@@ -282,7 +282,7 @@ worktree), not estimated.
   knowledge folders — workflow notes written by gated skills are deliberately
   untracked — and pre-0.10 `.brain-state.json` baselines migrate in place.
 - All skills search the vault (not just `brain/`) before starting work;
-  `/cadence:work` and `/cadence:code-reviewer` explicitly check recorded
+  `/turnstile:work` and `/turnstile:code-reviewer` explicitly check recorded
   decisions so implementations don't silently contradict an ADR.
 
 ## 0.9.0 — 2026-07-03
@@ -290,28 +290,28 @@ worktree), not estimated.
 - Epic -> user story -> task hierarchy. Items gain optional `type`
   (`epic`/`story`/`task`; absent means story) and `parent` fields — same
   `C-<n>` id counter, fully backward compatible with existing boards.
-- New `/cadence:breakdown [id]`: approval-gated decomposition of an epic into
+- New `/turnstile:breakdown [id]`: approval-gated decomposition of an epic into
   stories or an oversized story into tasks (two levels max). Writes a design
   doc per child referencing the parent's, appends children to the backlog at
   `status: idea`, and resets a formerly-`ready` parent to `idea` — containers
   never enter sprints; their leaves do. A skill, not an agent: breakdown is an
   interactive approval dialogue, which cadence's core values keep in-session.
-- `/cadence:refine` detects epic-sized ideas (multiple independent
+- `/turnstile:refine` detects epic-sized ideas (multiple independent
   deliverables, or above 8 points), records them as `type: epic`, and hands
   off to breakdown — so large backlog entries are split into workable items
   at creation time.
-- `/cadence:sprint-plan` UX: candidates (ready leaves only, grouped under
+- `/turnstile:sprint-plan` UX: candidates (ready leaves only, grouped under
   their epic) come with a recommended selection — budgeted against last
   sprint's velocity minus carryovers, favoring items that close out an
   in-flight epic, then epic coherence, then oldest-first — each with a
   one-line reason. The skill then *proposes* a goal derived from the
   selection instead of asking cold. Accepting either is one word; the user
   keeps the final pick and the no-goal-no-sprint gate stands.
-- `/cadence:review` rolls done-ness up: when the last child of a parent
+- `/turnstile:review` rolls done-ness up: when the last child of a parent
   passes review, the parent flips to `done` in the backlog (cascading upward)
   — the one derived exception to "only the reviewer marks done."
-- `/cadence:spec` refuses epics/containers; `/cadence:work` reads the parent
-  chain's design docs for context; `/cadence:board` renders the hierarchy
+- `/turnstile:spec` refuses epics/containers; `/turnstile:work` reads the parent
+  chain's design docs for context; `/turnstile:board` renders the hierarchy
   with per-container child progress; conversate routes "break this down" and
   childless-epic references to breakdown.
 - `validate-board.js` enforces the hierarchy: valid `type` values, epics only
@@ -321,9 +321,9 @@ worktree), not estimated.
 
 ## 0.8.1 — 2026-07-03
 
-- Fixed `/cadence:obsidian-graph` failing with Obsidian's "Vault not found"
+- Fixed `/turnstile:obsidian-graph` failing with Obsidian's "Vault not found"
   dialog on first use: `obsidian://open?path=` only resolves paths inside
-  vaults Obsidian already knows, and nothing registered `cadence/` in
+  vaults Obsidian already knows, and nothing registered `turnstile/` in
   Obsidian's global vault registry. `open-obsidian.js` now registers the
   vault (idempotently, best-effort) in `obsidian.json` — found per platform,
   including snap/flatpak locations on Linux — before launching the URI, and
@@ -336,7 +336,7 @@ worktree), not estimated.
 - Two-way brain awareness (fourth and final Obsidian sub-project): notes
   hand-edited directly in Obsidian are now detected instead of silently
   absorbed or overwritten. A baseline of note mtimes lives in
-  `cadence/.brain-state.json`; the new `list_changed_notes` MCP tool diffs
+  `turnstile/.brain-state.json`; the new `list_changed_notes` MCP tool diffs
   against it (added / modified / deleted) and `acknowledge: true` marks
   everything seen (the first acknowledge creates the baseline, so tracking
   is opt-in and older brains behave as before). `write_note` keeps the
@@ -365,30 +365,30 @@ worktree), not estimated.
 
 ## 0.6.0 — 2026-07-03
 
-- Added the `cadence-brain` MCP server (`scripts/brain-mcp.js`), a
+- Added the `turnstile-brain` MCP server (`scripts/brain-mcp.js`), a
   dependency-free MCP stdio implementation registered via `.mcp.json`. It
   exposes the brain as structured tools — `search_notes`, `read_note`,
   `write_note`, `list_backlinks`, `get_related`, `list_orphans`,
-  `list_unresolved_links` — reading `cadence/brain/` fresh on every call so
+  `list_unresolved_links` — reading `turnstile/brain/` fresh on every call so
   results always reflect the files on disk. Second of the four planned
   Obsidian sub-projects.
-- Added `/cadence:obsidian-graph`: opens the project's `cadence/` folder in
+- Added `/turnstile:obsidian-graph`: opens the project's `turnstile/` folder in
   Obsidian via the `obsidian://open` URI and points the user at Graph View
   with the default hotkey (Ctrl+G / Cmd+G). Obsidian's URI scheme has no
   direct graph action, and pre-writing `workspace.json` is deliberately
   avoided (undocumented schema, machine-specific ids), so the hotkey hint is
   the honest mechanism.
-- `brain-curator` and the cadence-brain rules now prefer the MCP tools over
+- `brain-curator` and the turnstile-brain rules now prefer the MCP tools over
   raw file greps when available; `write_note`'s description enforces
   read-before-overwrite.
 
 ## 0.5.0 — 2026-07-03
 
-- Added `/cadence:install-obsidian`: one-time, user-only setup that detects
+- Added `/turnstile:install-obsidian`: one-time, user-only setup that detects
   whether Obsidian is installed (fixed per-OS install locations, so manual
   installs are recognized), offers to install it via winget / brew cask /
   snap / flatpak after showing the exact command and getting confirmation,
-  and scaffolds `cadence/.obsidian/` with config captured verbatim from a
+  and scaffolds `turnstile/.obsidian/` with config captured verbatim from a
   real Obsidian-generated vault (core plugins for graph view, backlinks,
   tags, and search). Scaffolding is skip-if-exists — it never overwrites a
   live vault config, so re-running the command is always safe. First of the
@@ -401,23 +401,23 @@ worktree), not estimated.
 
 ## 0.4.0 — 2026-07-02
 
-- Added the `cadence-coder` agent (`model: inherit`): language-adaptive
+- Added the `turnstile-coder` agent (`model: inherit`): language-adaptive
   implementation of one ticket or one confirmed bug fix. It detects the repo's
   stack and conventions, implements test-first to the language community's own
-  standard, never commits, and never touches `cadence/` data files.
-  `cadence-work` dispatches it as the default implementation path for
+  standard, never commits, and never touches `turnstile/` data files.
+  `turnstile-work` dispatches it as the default implementation path for
   self-contained tickets (inline implementation remains for dialogue-heavy
-  work), and `cadence-systematic-debugger` dispatches it for fixes bigger than
+  work), and `turnstile-systematic-debugger` dispatches it for fixes bigger than
   a few lines -- keeping the orchestrating session's context lean.
 - The every-turn reminder now routes only messages that concern project work
-  through `cadence-conversate`; unrelated questions are answered directly
+  through `turnstile-conversate`; unrelated questions are answered directly
   instead of being forced into classification.
-- `cadence-work`'s frontend-design deferral is now conditional on that skill
+- `turnstile-work`'s frontend-design deferral is now conditional on that skill
   being installed, matching the existing TDD-skill phrasing.
 
 ## 0.3.0 — 2026-07-02
 
-- Skills no longer appear in the `/` menu: every `skills/cadence-*` file now
+- Skills no longer appear in the `/` menu: every `skills/turnstile-*` file now
   sets `user-invocable: false`, making the `commands/*` wrappers the only
   user-facing entry points (previously each capability showed up twice).
 - Gated skills swap `disable-model-invocation: true` for a description guard
@@ -431,22 +431,22 @@ worktree), not estimated.
 - Added `hooks/guard.js` (PreToolUse on Bash and PowerShell): mechanically
   blocks git commits that use `--no-verify` or carry an Anthropic/Claude
   attribution line. These rules were previously prose-only in
-  `cadence-brain`/`cadence-core`.
-- Added `hooks/validate-board.js` (PostToolUse): validates `cadence/backlog.yml`
-  and `cadence/sprint-*.yml` after every write — status values, `C-<n>` id
+  `turnstile-brain`/`turnstile-core`.
+- Added `hooks/validate-board.js` (PostToolUse): validates `turnstile/backlog.yml`
+  and `turnstile/sprint-*.yml` after every write — status values, `C-<n>` id
   format, duplicate ids, one `in_progress` item, one active sprint, and the
   one-live-copy-per-item rule. Feeds violations straight back to Claude.
 - Quoted `${CLAUDE_PLUGIN_ROOT}` in `hooks.json` (paths with spaces) and set
   a 10s timeout on every hook.
 - Trimmed the every-turn reminder text for token economy.
-- `cadence-work` now flips a ticket to `in_progress` before implementation
+- `turnstile-work` now flips a ticket to `in_progress` before implementation
   starts, so an interrupted session leaves the board accurate.
-- `cadence-review` documents the not-a-git-repo / no-commits edge case.
-- `cadence-review` now resumes an item stuck at `status: review` (interrupted
-  review session) instead of refusing it, and `cadence-conversate` routes such
+- `turnstile-review` documents the not-a-git-repo / no-commits edge case.
+- `turnstile-review` now resumes an item stuck at `status: review` (interrupted
+  review session) instead of refusing it, and `turnstile-conversate` routes such
   items back to review -- previously the only recovery was hand-editing YAML.
-- `brain-curator` is explicitly scoped to writing inside `cadence/brain/`.
-- Trimmed boilerplate sections from the `cadence-core` and `cadence-brain`
+- `brain-curator` is explicitly scoped to writing inside `turnstile/brain/`.
+- Trimmed boilerplate sections from the `turnstile-core` and `turnstile-brain`
   background skills; the every-turn reminder now carries the two most critical
   core rules (review-only done, brain-first) instead of relying solely on
   description-based auto-loading.
@@ -457,5 +457,5 @@ worktree), not estimated.
 ## 0.1.0 — 2026-07-02
 
 - Initial release: conversate, brainstorm, refine, spec, sprint-plan, work,
-  review, standup, board, systematic-debugger, code-reviewer; cadence-reviewer
+  review, standup, board, systematic-debugger, code-reviewer; turnstile-reviewer
   and brain-curator agents; every-turn workflow reminder hook.

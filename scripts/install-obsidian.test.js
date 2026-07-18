@@ -187,13 +187,13 @@ test('install refuses when no package manager is available', () => {
   assert.ok(!calls.run.includes('winget install Obsidian.Obsidian'));
 });
 
-test('scaffold refuses when cadence/ does not exist', () => {
+test('scaffold refuses when turnstile/ does not exist', () => {
   const { deps, calls } = makeDeps({ cwd: '/proj' });
-  assert.deepEqual(scaffold(deps), { scaffolded: false, reason: 'no-cadence-dir' });
+  assert.deepEqual(scaffold(deps), { scaffolded: false, reason: 'no-turnstile-dir' });
   assert.equal(calls.run.length, 0);
 });
 
-test('scaffold is a no-op when cadence/.obsidian already exists', () => {
+test('scaffold is a no-op when turnstile/.obsidian already exists', () => {
   const writes = [];
   const { deps } = makeDeps({
     cwd: '/proj',
@@ -244,11 +244,11 @@ test('cli: detect prints one parseable JSON line', () => {
 test('cli: scaffold outside a cadence project refuses politely', () => {
   const fs = require('node:fs');
   const os = require('node:os');
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-test-'));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-test-'));
   try {
     const result = spawnSync('node', [SCRIPT_PATH, 'scaffold'], { encoding: 'utf8', cwd: tmp });
     assert.equal(result.status, 0);
-    assert.deepEqual(JSON.parse(result.stdout), { scaffolded: false, reason: 'no-cadence-dir' });
+    assert.deepEqual(JSON.parse(result.stdout), { scaffolded: false, reason: 'no-turnstile-dir' });
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }

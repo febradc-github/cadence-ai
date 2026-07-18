@@ -154,7 +154,7 @@ const VAULT_FILES = {
 function scaffold(deps) {
   const cadenceDir = path.join(deps.cwd, 'cadence');
   if (!deps.exists(cadenceDir)) {
-    return { scaffolded: false, reason: 'no-cadence-dir' };
+    return { scaffolded: false, reason: 'no-turnstile-dir' };
   }
   const obsidianDir = path.join(cadenceDir, '.obsidian');
   if (deps.exists(obsidianDir)) {

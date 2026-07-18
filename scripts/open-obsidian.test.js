@@ -39,7 +39,7 @@ test('buildUri percent-encodes the vault path', () => {
 
 test('open refuses without a cadence dir', () => {
   const { deps, calls } = makeDeps();
-  assert.deepEqual(openObsidian(deps), { opened: false, reason: 'no-cadence-dir' });
+  assert.deepEqual(openObsidian(deps), { opened: false, reason: 'no-turnstile-dir' });
   assert.equal(calls.run.length, 0);
 });
 

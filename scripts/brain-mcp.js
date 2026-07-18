@@ -89,7 +89,7 @@ function loadBrain(dir) {
 
 function requireBrain(dir) {
   const notes = loadBrain(dir);
-  if (notes === null) throw new Error('no cadence/ directory in this project');
+  if (notes === null) throw new Error('no turnstile/ directory in this project');
   return notes;
 }
 
@@ -131,7 +131,7 @@ function searchNotes(dir, args) {
   const rawLimit = args && args.limit;
   const limit = Number.isInteger(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 20;
   const notes = loadBrain(dir);
-  if (notes === null) return { results: [], note: 'no cadence/ directory in this project' };
+  if (notes === null) return { results: [], note: 'no turnstile/ directory in this project' };
   const results = [];
   for (const note of notes) {
     const matches = [];
@@ -205,7 +205,7 @@ function listBacklinks(dir, args) {
   const name = (args && args.name) || '';
   if (!validName(name)) throw new Error('name is required (no path separators)');
   const notes = loadBrain(dir);
-  if (notes === null) return { name, backlinks: [], note: 'no cadence/ directory in this project' };
+  if (notes === null) return { name, backlinks: [], note: 'no turnstile/ directory in this project' };
   return { name, backlinks: backlinksFor(notes, name) };
 }
 
@@ -214,7 +214,7 @@ function getRelated(dir, args) {
   if (!validName(name)) throw new Error('name is required (no path separators)');
   const notes = loadBrain(dir);
   if (notes === null) {
-    return { name, outgoing: [], backlinks: [], sharedTags: [], note: 'no cadence/ directory in this project' };
+    return { name, outgoing: [], backlinks: [], sharedTags: [], note: 'no turnstile/ directory in this project' };
   }
   const note = findNote(notes, name);
   const sharedTags = [];
@@ -236,7 +236,7 @@ function getRelated(dir, args) {
 
 function listOrphans(dir) {
   const notes = loadBrain(dir);
-  if (notes === null) return { orphans: [], note: 'no cadence/ directory in this project' };
+  if (notes === null) return { orphans: [], note: 'no turnstile/ directory in this project' };
   const orphans = notes
     .filter((note) => {
       const resolvedOut = note.links.filter((l) => resolvesByName(notes, l));
@@ -248,7 +248,7 @@ function listOrphans(dir) {
 
 function listUnresolvedLinks(dir) {
   const notes = loadBrain(dir);
-  if (notes === null) return { unresolved: [], note: 'no cadence/ directory in this project' };
+  if (notes === null) return { unresolved: [], note: 'no turnstile/ directory in this project' };
   return { unresolved: unresolvedFrom(notes) };
 }
 
@@ -325,7 +325,7 @@ function listChangedNotes(dir, args) {
   const acknowledge = !!(args && args.acknowledge);
   const current = snapshotBrain(dir);
   if (current === null) {
-    return { tracked: false, changed: [], acknowledged: false, note: 'no cadence/ directory in this project' };
+    return { tracked: false, changed: [], acknowledged: false, note: 'no turnstile/ directory in this project' };
   }
   const state = readState(dir);
   if (!state) {
@@ -347,7 +347,7 @@ function listChangedNotes(dir, args) {
 // note whose filename equals another note's alias.
 function listStrayNotes(dir) {
   const notes = loadBrain(dir);
-  if (notes === null) return { strays: [], note: 'no cadence/ directory in this project' };
+  if (notes === null) return { strays: [], note: 'no turnstile/ directory in this project' };
   return { strays: straysFrom(notes) };
 }
 
@@ -390,7 +390,7 @@ function vaultAlerts(dir) {
 
 function listTags(dir) {
   const notes = loadBrain(dir);
-  if (notes === null) return { tags: [], note: 'no cadence/ directory in this project' };
+  if (notes === null) return { tags: [], note: 'no turnstile/ directory in this project' };
   const byTag = new Map();
   for (const note of notes) {
     for (const tag of note.tags) {
@@ -409,7 +409,7 @@ const TOOLS = [
   {
     name: 'search_notes',
     description:
-      'Search every cadence/ vault note by name, alias, tag, and content (case-insensitive substring). Returns up to `limit` notes (default 20) with matching lines.',
+      'Search every turnstile/ vault note by name, alias, tag, and content (case-insensitive substring). Returns up to `limit` notes (default 20) with matching lines.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -502,7 +502,7 @@ function pluginVersion() {
   }
 }
 
-const SERVER_INFO = { name: 'cadence-brain', version: pluginVersion() };
+const SERVER_INFO = { name: 'turnstile-brain', version: pluginVersion() };
 
 function handleMessage(msg, dir) {
   const hasId = msg.id !== undefined && msg.id !== null;

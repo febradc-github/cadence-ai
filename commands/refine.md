@@ -4,4 +4,4 @@ argument-hint: "[idea description]"
 disable-model-invocation: true
 ---
 
-Use the Skill tool to invoke the `cadence-refine` skill, passing `$ARGUMENTS` and the rest of this message unchanged.
+Use the Skill tool to invoke the `turnstile-refine` skill, passing `$ARGUMENTS` and the rest of this message unchanged.

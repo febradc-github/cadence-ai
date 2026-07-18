@@ -13,7 +13,7 @@ function buildUri(vaultPath) {
 
 // Obsidian's URI handler only resolves paths inside vaults listed in its
 // global registry (obsidian.json in Obsidian's config dir) — an unregistered
-// folder gets "Vault not found" even if cadence/.obsidian/ exists.
+// folder gets "Vault not found" even if turnstile/.obsidian/ exists.
 function registryCandidates(deps) {
   const platform = platformName(deps.platform);
   const home = deps.env.HOME || deps.env.USERPROFILE;
@@ -71,7 +71,7 @@ function ensureVaultRegistered(deps, vaultPath) {
 function openObsidian(deps) {
   const projectDir = deps.env.CLAUDE_PROJECT_DIR || deps.cwd;
   const cadenceDir = path.resolve(projectDir, 'cadence');
-  if (!deps.exists(cadenceDir)) return { opened: false, reason: 'no-cadence-dir' };
+  if (!deps.exists(cadenceDir)) return { opened: false, reason: 'no-turnstile-dir' };
   const vaultConfigured = deps.exists(path.join(cadenceDir, '.obsidian'));
   const registration = ensureVaultRegistered(deps, cadenceDir);
   const uri = buildUri(cadenceDir);

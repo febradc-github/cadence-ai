@@ -4,4 +4,4 @@ argument-hint: "[id] [reason]"
 disable-model-invocation: true
 ---
 
-Use the Skill tool to invoke the `cadence-drop` skill, passing `$ARGUMENTS` and the rest of this message unchanged.
+Use the Skill tool to invoke the `turnstile-drop` skill, passing `$ARGUMENTS` and the rest of this message unchanged.

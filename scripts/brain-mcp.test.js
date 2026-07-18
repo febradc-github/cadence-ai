@@ -121,7 +121,7 @@ test('searchNotes matches names, tags, and content lines across folders', () => 
 test('searchNotes on a missing vault returns empty with a note', () => {
   const result = searchNotes(path.join(os.tmpdir(), 'nope-' + Date.now()), { query: 'x' });
   assert.deepEqual(result.results, []);
-  assert.match(result.note, /no cadence/);
+  assert.match(result.note, /no turnstile/);
 });
 
 test('readNote resolves names case-insensitively and aliases as a convenience', () => {
@@ -293,7 +293,7 @@ test('mcp server: initialize, tools/list, tools/call over stdio', async () => {
 
   assert.equal(responses[0].id, 1);
   assert.equal(responses[0].result.protocolVersion, '2025-06-18');
-  assert.equal(responses[0].result.serverInfo.name, 'cadence-brain');
+  assert.equal(responses[0].result.serverInfo.name, 'turnstile-brain');
   assert.deepEqual(responses[0].result.capabilities, { tools: {} });
 
   assert.equal(responses[1].id, 2);
@@ -332,7 +332,7 @@ test('listTags aggregates frontmatter tags vault-wide sorted by count', () => {
 test('listTags on a missing vault returns empty with a note', () => {
   const result = listTags(path.join(os.tmpdir(), 'nope-' + Date.now()), {});
   assert.deepEqual(result.tags, []);
-  assert.match(result.note, /no cadence/);
+  assert.match(result.note, /no turnstile/);
 });
 
 test('listChangedNotes lifecycle: baseline, hand-edits, acknowledge', () => {

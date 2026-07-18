@@ -4,4 +4,4 @@ description: Natural-language entry point -- answers from the board or routes th
 argument-hint: "[what you want]"
 ---
 
-Use the Skill tool to invoke the `cadence-conversate` skill, passing `$ARGUMENTS` and the rest of this message unchanged.
+Use the Skill tool to invoke the `turnstile-conversate` skill, passing `$ARGUMENTS` and the rest of this message unchanged.

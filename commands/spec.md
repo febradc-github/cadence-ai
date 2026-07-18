@@ -4,4 +4,4 @@ argument-hint: "[id]"
 disable-model-invocation: true
 ---
 
-Use the Skill tool to invoke the `cadence-spec` skill, passing `$ARGUMENTS` and the rest of this message unchanged.
+Use the Skill tool to invoke the `turnstile-spec` skill, passing `$ARGUMENTS` and the rest of this message unchanged.

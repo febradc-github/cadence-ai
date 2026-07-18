@@ -7,23 +7,23 @@ const os = require('node:os');
 
 const REMIND_PATH = path.join(__dirname, 'remind.js');
 const EXPECTED_MESSAGE =
-  "This project uses the cadence workflow; never skip a gate. Only /cadence:review marks an item done; search cadence/brain/ before starting new work. Never read env files (.env, .env.*, *.env, .envrc) -- no tool, no shell command, no exceptions; ask the user for config values. If this message concerns project work (an idea, a ticket, a bug, a review request, or board status), invoke the cadence-conversate skill to classify and route it -- unless you just asked the user a follow-up question inside a gated cadence skill (refine/breakdown/spec/sprint-plan/quick/drop/work/review). Answer messages unrelated to cadence work normally, without routing.\n";
+  "This project uses the cadence workflow; never skip a gate. Only /turnstile:review marks an item done; search turnstile/brain/ before starting new work. Never read env files (.env, .env.*, *.env, .envrc) -- no tool, no shell command, no exceptions; ask the user for config values. If this message concerns project work (an idea, a ticket, a bug, a review request, or board status), invoke the turnstile-conversate skill to classify and route it -- unless you just asked the user a follow-up question inside a gated cadence skill (refine/breakdown/spec/sprint-plan/quick/drop/work/review). Answer messages unrelated to cadence work normally, without routing.\n";
 
-test('remind.js prints nothing when no cadence/ directory exists', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+test('remind.js prints nothing when no turnstile/ directory exists', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
   const output = execFileSync('node', [REMIND_PATH], { encoding: 'utf8', cwd: tmpDir });
   assert.equal(output, '');
 });
 
-test('remind.js prints the workflow + routing reminder when cadence/ directory exists', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+test('remind.js prints the workflow + routing reminder when turnstile/ directory exists', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
   fs.mkdirSync(path.join(tmpDir, 'cadence'));
   const output = execFileSync('node', [REMIND_PATH], { encoding: 'utf8', cwd: tmpDir });
   assert.equal(output, EXPECTED_MESSAGE);
 });
 
 test('remind.js appends a stray-note line when a root file shadows an alias', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
   const vault = path.join(tmpDir, 'cadence');
   const epics = path.join(vault, 'epics');
   fs.mkdirSync(epics, { recursive: true });
@@ -39,7 +39,7 @@ test('remind.js appends a stray-note line when a root file shadows an alias', ()
 });
 
 test('remind.js appends an unresolved-link line for click-trap wikilinks', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
   const brain = path.join(tmpDir, 'cadence', 'brain');
   fs.mkdirSync(brain, { recursive: true });
   fs.writeFileSync(
@@ -61,19 +61,19 @@ function runRemind(cwd, sessionId) {
 }
 
 test('remind.js emits the full message on the first prompt of a session, a short anchor after', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
   fs.mkdirSync(path.join(tmpDir, 'cadence'));
   const first = runRemind(tmpDir, 'session-a');
   const second = runRemind(tmpDir, 'session-a');
   assert.equal(first, EXPECTED_MESSAGE);
   assert.notEqual(second, EXPECTED_MESSAGE);
   assert.ok(second.length < EXPECTED_MESSAGE.length / 4, `anchor too long: ${second.length} chars`);
-  assert.match(second, /cadence/i);
+  assert.match(second, /turnstile/i);
   assert.match(second, /conversate/);
 });
 
 test('remind.js emits the full message again for a different session id', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
   fs.mkdirSync(path.join(tmpDir, 'cadence'));
   runRemind(tmpDir, 'session-a');
   const otherSession = runRemind(tmpDir, 'session-b');
@@ -81,7 +81,7 @@ test('remind.js emits the full message again for a different session id', () => 
 });
 
 test('remind.js re-emits the full message periodically within one session', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
   fs.mkdirSync(path.join(tmpDir, 'cadence'));
   let fullCount = 0;
   for (let i = 0; i < 61; i++) {
@@ -92,7 +92,7 @@ test('remind.js re-emits the full message periodically within one session', () =
 });
 
 test('remind.js still appends alert lines on anchor turns', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
   const vault = path.join(tmpDir, 'cadence');
   fs.mkdirSync(vault);
   runRemind(tmpDir, 'session-a');
@@ -103,14 +103,14 @@ test('remind.js still appends alert lines on anchor turns', () => {
 });
 
 test('remind.js falls back to the full message when stdin has no session id', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
   fs.mkdirSync(path.join(tmpDir, 'cadence'));
   const output = execFileSync('node', [REMIND_PATH], { encoding: 'utf8', cwd: tmpDir, input: 'not json' });
   assert.equal(output, EXPECTED_MESSAGE);
 });
 
 test('remind.js appends a hand-edit line when tracked knowledge notes changed', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-remind-test-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-remind-test-'));
   const vault = path.join(tmpDir, 'cadence');
   const brain = path.join(vault, 'brain');
   fs.mkdirSync(brain, { recursive: true });
@@ -120,6 +120,6 @@ test('remind.js appends a hand-edit line when tracked knowledge notes changed', 
   fs.writeFileSync(path.join(brain, 'hand-made.md'), '# Hand made\n');
   const output = execFileSync('node', [REMIND_PATH], { encoding: 'utf8', cwd: tmpDir });
   assert.ok(output.startsWith(EXPECTED_MESSAGE));
-  assert.match(output, /1 knowledge note\(s\) changed outside cadence/);
+  assert.match(output, /1 knowledge note\(s\) changed outside turnstile/);
   assert.match(output, /hand-made/);
 });

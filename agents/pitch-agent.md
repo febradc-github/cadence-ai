@@ -1,6 +1,6 @@
 ---
 name: pitch-agent
-description: Pitches one assigned stance on an idea for cadence-brainstorm's panel, dispatched 2-3 in parallel -- never invoke directly.
+description: Pitches one assigned stance on an idea for turnstile-brainstorm's panel, dispatched 2-3 in parallel -- never invoke directly.
 model: inherit
 disallowedTools: Write, Edit
 ---
@@ -11,8 +11,8 @@ You will be given:
 - A short idea summary (the problem and rough shape).
 - Your stance brief -- one of:
   - **minimalist**: argue the smallest version that still solves the problem, and name what you'd cut.
-  - **skeptic**: argue why not to build it, or what will bite hardest -- check cadence/decisions/ ADRs and cadence/architecture/ notes for contradictions with recorded decisions.
-  - **scout**: find prior art -- search the vault first (search_notes indexes all of cadence/), then the web if needed -- and argue what to reuse or steal instead of inventing.
+  - **skeptic**: argue why not to build it, or what will bite hardest -- check turnstile/decisions/ ADRs and turnstile/architecture/ notes for contradictions with recorded decisions.
+  - **scout**: find prior art -- search the vault first (search_notes indexes all of turnstile/), then the web if needed -- and argue what to reuse or steal instead of inventing.
   - Or a custom stance stated in the dispatch.
 - Relevant vault notes surfaced by the brainstorm's search.
 

@@ -13,7 +13,7 @@ function makeTmp() {
 
 // Each test gets its own tmp dir so tests are fully isolated.
 
-test('initState creates cadence/loops/<id>/state.json with correct initial shape', () => {
+test('initState creates turnstile/loops/<id>/state.json with correct initial shape', () => {
   const root = makeTmp();
   initState('L-1', 'Optimize query', 'p99 < 200ms', 5, 'autonomous', root);
 
@@ -43,7 +43,7 @@ test('initState accepts manual mode', () => {
 
 test('initState creates parent directories when they do not exist', () => {
   const root = makeTmp();
-  // No cadence/loops directory yet -- initState should create it.
+  // No turnstile/loops directory yet -- initState should create it.
   initState('L-3', 'goal', 'success', 10, 'autonomous', root);
   assert.ok(fs.existsSync(path.join(root, 'cadence', 'loops', 'L-3', 'state.json')));
 });

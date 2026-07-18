@@ -3,4 +3,4 @@ description: Starts a new sprint. Rolls over unfinished items from the prior spr
 disable-model-invocation: true
 ---
 
-Use the Skill tool to invoke the `cadence-sprint-plan` skill, passing along the rest of this message unchanged.
+Use the Skill tool to invoke the `turnstile-sprint-plan` skill, passing along the rest of this message unchanged.

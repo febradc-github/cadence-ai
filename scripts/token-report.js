@@ -88,7 +88,7 @@ try {
 // feeding it a fixed session id twice to capture first-turn and repeat sizes.
 const { execFileSync } = require('node:child_process');
 const os = require('node:os');
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cadence-token-report-'));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'turnstile-token-report-'));
 fs.mkdirSync(path.join(tmp, 'cadence'), { recursive: true });
 function remindOutput(sessionId) {
   try {
@@ -119,13 +119,13 @@ emissions.forEach((chars, i) => {
 // --- invoked: reference workflow bodies ---
 const pick = (dir, name) => path.join(root, dir, name);
 const invokedFiles = [
-  pick('skills', 'cadence-conversate/SKILL.md'),
-  pick('skills', 'cadence-core/SKILL.md'),
-  pick('skills', 'cadence-brain/SKILL.md'),
-  pick('skills', 'cadence-work/SKILL.md'),
-  pick('skills', 'cadence-review/SKILL.md'),
-  pick('agents', 'cadence-coder.md'),
-  pick('agents', 'cadence-reviewer.md'),
+  pick('skills', 'turnstile-conversate/SKILL.md'),
+  pick('skills', 'turnstile-core/SKILL.md'),
+  pick('skills', 'turnstile-brain/SKILL.md'),
+  pick('skills', 'turnstile-work/SKILL.md'),
+  pick('skills', 'turnstile-review/SKILL.md'),
+  pick('agents', 'turnstile-coder.md'),
+  pick('agents', 'turnstile-reviewer.md'),
   pick('agents', 'brain-curator.md'),
 ].filter((f) => fs.existsSync(f));
 const invokedChars = invokedFiles.map((f) => body(f).length).reduce((a, b) => a + b, 0);

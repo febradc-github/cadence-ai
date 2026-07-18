@@ -4,4 +4,4 @@ argument-hint: "[short description]"
 disable-model-invocation: true
 ---
 
-Use the Skill tool to invoke the `cadence-quick` skill, passing `$ARGUMENTS` and the rest of this message unchanged.
+Use the Skill tool to invoke the `turnstile-quick` skill, passing `$ARGUMENTS` and the rest of this message unchanged.
