@@ -10,7 +10,7 @@ user-invocable: false
 - Run `node ${CLAUDE_PLUGIN_ROOT}/scripts/config.js` first (surface any warnings once). cadence: sprint -- this command is flow-mode only: explain that sprints pull work via /turnstile:sprint-plan and stop.
 - The flow board is turnstile/sprint.yml with `mode: flow` under the sprint header -- same filename, same invariants (one active board, one in_progress, one live copy per item). It is never archived while cadence stays flow.
 - The queue is the backlog's ready leaf items in file order -- oldest first, no re-ranking ceremony. The user confirms (or overrides) the pull; no confirmation, no write.
-- Only one item may be in_progress. If something is already in_progress, point at it instead of pulling more work.
+- Only one item may be in_progress; parked items do not count and never block a pull. If something is already in_progress, point at it instead of pulling more work.
 - Before creating the flow board, Read references/flow-template.md from this skill's base directory and use that exact format.
 </important>
 

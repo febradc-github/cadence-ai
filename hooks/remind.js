@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const MESSAGE =
-  "This project uses the cadence workflow; never skip a gate. Only /turnstile:review marks an item done; search turnstile/brain/ before starting new work. Never read env files (.env, .env.*, *.env, .envrc) -- no tool, no shell command, no exceptions; ask the user for config values. If this message concerns project work (an idea, a ticket, a bug, a review request, or board status), invoke the turnstile-conversate skill to classify and route it -- unless you just asked the user a follow-up question inside a gated cadence skill (refine/breakdown/spec/sprint-plan/next/quick/drop/work/review). Answer messages unrelated to cadence work normally, without routing.\n";
+  "This project uses the cadence workflow; never skip a gate. Only /turnstile:review marks an item done; search turnstile/brain/ before starting new work. Never read env files (.env, .env.*, *.env, .envrc) -- no tool, no shell command, no exceptions; ask the user for config values. If this message concerns project work (an idea, a ticket, a bug, a review request, or board status), invoke the turnstile-conversate skill to classify and route it -- unless you just asked the user a follow-up question inside a gated cadence skill (refine/breakdown/spec/sprint-plan/next/quick/drop/park/pickup/work/review). Answer messages unrelated to cadence work normally, without routing.\n";
 const ANCHOR = 'cadence active: route project work via the turnstile-conversate skill; gates and the no-env-files rule apply.\n';
 const REFRESH_EVERY = 30; // full message on prompts 1, 31, 61, ...
 const MAX_TRACKED_SESSIONS = 20;

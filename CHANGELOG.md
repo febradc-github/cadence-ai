@@ -57,6 +57,17 @@
   scope-honesty summary moved to `/turnstile:board`. New contributor
   rule in the README: command basenames must not duplicate Claude Code
   built-ins or core mode names.
+- New `/turnstile:park [reason]` and `parked` status: stashes the single
+  `in_progress` ticket with a `parked_at` timestamp on the board and a
+  resume note (current state, next step, blockers) in the item note, so
+  urgent unrelated work can start while the one-`in_progress` invariant
+  holds — parked items don't count against it. `/turnstile:pickup` with
+  nothing in progress offers to un-park the most recently parked ticket,
+  reading its resume note first; the `## Resume` section stays as history
+  after un-parking. `validate-board.js` enforces both invariants on live
+  boards (parked ⇒ `parked_at` present, and a shallow check that the item
+  note exists with a `## Resume` heading — it never parses note structure
+  beyond that).
 
 ## 0.21.0 — 2026-07-18
 

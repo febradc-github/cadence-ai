@@ -28,5 +28,7 @@ Read when sprint-plan writes the new turnstile/sprint.yml.
         notes: ""
 
 Items with `type` and `parent` fields keep both (that is how the board and
-review trace them back to their epic/story). Do not copy `acceptance_criteria`
-or descriptions -- they live in the vault notes.
+review trace them back to their epic/story). A carried-over `parked` item
+keeps its `status: parked` and `parked_at` unchanged -- its resume note still
+governs it. Do not copy `acceptance_criteria` or descriptions -- they live in
+the vault notes.

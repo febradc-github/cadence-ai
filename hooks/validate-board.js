@@ -11,7 +11,7 @@ const path = require('node:path');
 // write (PL-<n> plans instead of DS/SP), not the board's states -- solo items
 // still move idea/ready -> todo -> in_progress -> review -> done, so no
 // profile-specific invariants exist here.
-const ITEM_STATUSES = new Set(['todo', 'in_progress', 'review', 'done', 'dropped']);
+const ITEM_STATUSES = new Set(['todo', 'in_progress', 'review', 'done', 'dropped', 'parked']);
 const SPRINT_STATUSES = new Set(['active', 'completed']);
 // cadence: flow (turnstile/config.yml) reuses sprint.yml with a mode: flow
 // header marker, so every sprint invariant (one active board, one
@@ -36,14 +36,14 @@ function scanBoardFile(filePath, kind, label) {
     }
     const idMatch = line.match(/^\s*-\s+id:\s*["']?(\S+?)["']?\s*$/);
     if (idMatch && inItems) {
-      current = { id: idMatch[1], status: null, type: null, parent: null };
+      current = { id: idMatch[1], status: null, type: null, parent: null, parked_at: null };
       items.push(current);
       if (!/^C-\d+$/.test(current.id)) {
         problems.push(`${label}: id "${current.id}" does not match C-<number>`);
       }
       continue;
     }
-    const fieldMatch = line.match(/^\s*(status|type|parent|mode):\s*["']?(\S+?)["']?\s*$/);
+    const fieldMatch = line.match(/^\s*(status|type|parent|mode|parked_at):\s*["']?(\S+?)["']?\s*$/);
     if (!fieldMatch) continue;
     const [, field, value] = fieldMatch;
     if (inItems && current) {
@@ -125,6 +125,26 @@ function validate(cadenceDir) {
     const inProgress = sprint.items.filter((i) => i.status === 'in_progress');
     if (inProgress.length > 1) {
       problems.push(`${board.label}: ${inProgress.length} items are in_progress (${inProgress.map((i) => i.id).join(', ')}); only one is allowed`);
+    }
+    // Parked items (live boards only -- archives are immutable history) must
+    // carry parked_at on the board and a resume note in their item note. The
+    // note check is deliberately shallow: file exists, "## Resume" heading
+    // present -- this validator never parses note structure beyond that.
+    for (const item of sprint.items.filter((i) => i.status === 'parked')) {
+      if (!item.parked_at) {
+        problems.push(`${board.label}: parked item ${item.id} has no parked_at timestamp`);
+      }
+      const n = (item.id.match(/^C-(\d+)$/) || [])[1];
+      const noteRel = item.type === 'task' ? `tasks/TK-${n}.md` : `user-stories/US-${n}.md`;
+      let hasResume = false;
+      try {
+        hasResume = /^##\s+Resume\b/m.test(fs.readFileSync(path.join(cadenceDir, noteRel), 'utf8'));
+      } catch {
+        // missing note: hasResume stays false
+      }
+      if (!hasResume) {
+        problems.push(`${board.label}: parked item ${item.id} has no resume note (a "## Resume" section in ${noteRel})`);
+      }
     }
     for (const item of sprint.items) {
       if (liveIds.has(item.id)) {

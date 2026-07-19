@@ -179,6 +179,85 @@ test('allows a completed flow board in the archive (cadence switched back to spr
   assert.equal(runValidator(path.join(dir, 'backlog.yml')).status, 0);
 });
 
+const RESUME_NOTE = `---
+type: task
+aliases: ["C-4", "Fourth"]
+---
+
+# C-4: Fourth
+
+## Resume
+State: half-done. Next: wire the handler. Blocked on: nothing.
+`;
+
+test('accepts a parked item with parked_at and a resume note', () => {
+  const sprint = GOOD_SPRINT.replace(
+    'id: C-4\n    title: "Fourth"\n    status: todo',
+    'id: C-4\n    title: "Fourth"\n    type: task\n    status: parked\n    parked_at: 2026-07-19T10:00:00Z'
+  );
+  const dir = makeCadenceDir({ 'sprint.yml': sprint, 'tasks/TK-4.md': RESUME_NOTE });
+  assert.equal(runValidator(path.join(dir, 'sprint.yml')).status, 0);
+});
+
+test('parked items do not count against the one-in_progress rule', () => {
+  const sprint = GOOD_SPRINT.replace(
+    'id: C-4\n    title: "Fourth"\n    status: todo',
+    'id: C-4\n    title: "Fourth"\n    type: task\n    status: parked\n    parked_at: 2026-07-19T10:00:00Z'
+  );
+  // C-3 stays in_progress alongside the parked C-4: valid.
+  const dir = makeCadenceDir({ 'sprint.yml': sprint, 'tasks/TK-4.md': RESUME_NOTE });
+  assert.equal(runValidator(path.join(dir, 'sprint.yml')).status, 0);
+});
+
+test('rejects a parked item without parked_at', () => {
+  const sprint = GOOD_SPRINT.replace('status: todo', 'status: parked');
+  const dir = makeCadenceDir({ 'sprint.yml': sprint, 'user-stories/US-4.md': RESUME_NOTE });
+  const result = runValidator(path.join(dir, 'sprint.yml'));
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /parked item C-4 has no parked_at/);
+});
+
+test('rejects a parked item whose note lacks a Resume section', () => {
+  const sprint = GOOD_SPRINT.replace(
+    'status: todo',
+    'status: parked\n    parked_at: 2026-07-19T10:00:00Z'
+  );
+  const note = RESUME_NOTE.replace('## Resume\n', '## Notes\n');
+  const dir = makeCadenceDir({ 'sprint.yml': sprint, 'user-stories/US-4.md': note });
+  const result = runValidator(path.join(dir, 'sprint.yml'));
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /resume note/);
+});
+
+test('rejects a parked item with no item note at all', () => {
+  const sprint = GOOD_SPRINT.replace(
+    'status: todo',
+    'status: parked\n    parked_at: 2026-07-19T10:00:00Z'
+  );
+  const dir = makeCadenceDir({ 'sprint.yml': sprint });
+  const result = runValidator(path.join(dir, 'sprint.yml'));
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /resume note/);
+});
+
+test('rejects parked as a backlog status', () => {
+  const dir = makeCadenceDir({
+    'backlog.yml': 'items:\n  - id: C-1\n    status: parked\n',
+  });
+  const result = runValidator(path.join(dir, 'backlog.yml'));
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /invalid status "parked"/);
+});
+
+test('does not enforce the resume-note invariant on archived boards', () => {
+  const archived = GOOD_SPRINT.replace('status: active', 'status: completed').replace(
+    'status: todo',
+    'status: parked\n    parked_at: 2026-07-19T10:00:00Z'
+  );
+  const dir = makeCadenceDir({ 'sprints/sprint-1.yml': archived });
+  assert.equal(runValidator(path.join(dir, 'sprints', 'sprint-1.yml')).status, 0);
+});
+
 test('rejects an invalid sprint status', () => {
   const dir = makeCadenceDir({ 'sprint.yml': GOOD_SPRINT.replace('status: active', 'status: open') });
   const result = runValidator(path.join(dir, 'sprint.yml'));

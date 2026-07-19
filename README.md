@@ -73,7 +73,8 @@ command exists).
 | `/turnstile:remember [note]` | Files a note you dictate into the vault. You author the content; the curator only files, tags, and links it. Both capture modes. |
 | `/turnstile:work [id]` | Implements one ticket with TDD. |
 | `/turnstile:review [id]` | Independent done-ness check; commits on pass. |
-| `/turnstile:pickup` | Where was I? Read-only work-state restoration: the in-progress ticket, its implementation state, blockers, and the relevant notes, ending with the next command to run. (The built-in `/resume` restores a past conversation; pickup restores the work.) |
+| `/turnstile:pickup` | Where was I? Read-only work-state restoration: the in-progress ticket, its implementation state, blockers, and the relevant notes, ending with the next command to run. Offers to un-park the most recently parked ticket when nothing is in progress. (The built-in `/resume` restores a past conversation; pickup restores the work.) |
+| `/turnstile:park [reason]` | Stashes the in-progress ticket: status `parked` with a `parked_at` timestamp and a resume note (current state, next step, blockers) in the item note, so urgent unrelated work can start. |
 | `/turnstile:standup` | Deprecated alias for `/turnstile:pickup`; removed next release. |
 | `/turnstile:board` | Read-only render of the whole board. |
 | `/turnstile:systematic-debugger [bug]` | Independent root-cause debugging. Ad hoc, not gated. |
@@ -176,7 +177,10 @@ board reports scope growth honestly. And a reported bug becomes tracked work via
 the debugger: related to the in-progress ticket, it's fixed within that
 ticket's diff; unrelated, it becomes a quick bug task that runs right after —
 so every fix is reviewed and committed under a ticket, and only one thing is
-ever in progress.
+ever in progress. When the interrupt cannot wait, `/turnstile:park` stashes
+the in-progress ticket (status `parked`, resume note in the item note) so
+the urgent work starts clean; `/turnstile:pickup` restores the parked ticket
+later with its full resume context.
 
 `/turnstile:conversate` classifies a message and drives this pipeline directly
 instead of requiring each command to be typed by hand.
@@ -214,7 +218,7 @@ ticket `C-7` maps to `EP-7`/`US-7`/`TK-7` (by type) plus `DS-7` and `SP-7`
 folder.
 
 The YAML board holds tracking fields only (id, title, type, parent, status,
-points, assignee, carryovers, notes) -- descriptions live in the item notes
+points, assignee, carryovers, parked_at, notes) -- descriptions live in the item notes
 and acceptance criteria in the specs, so no fact has two copies that can
 drift. Links always use these typed names (`[[US-7]]`, `[[DS-7]]`) because
 Obsidian resolves wikilinks by exact filename only -- aliases never resolve a
@@ -248,7 +252,7 @@ with a `turnstile/` directory, except the commit guard, which is safe anywhere):
 |---|---|---|
 | `remind.js` | UserPromptSubmit | Injects the full gate rules on the first prompt of a session (refreshed every 30 prompts so it survives context compaction) and a one-line anchor on every other prompt; flags hand-edited knowledge notes and stray link-hijacking notes (Obsidian click-artifacts that shadow ticket-id aliases). Session tracking lives in `turnstile/.remind-state.json`. |
 | `guard.js` | PreToolUse (all file + shell tools) | Blocks `git commit --no-verify` and Anthropic/Claude attribution lines; blocks any access to env files (`.env`, `.env.*`, `*.env`, `.envrc`) by path, glob, or shell command -- secrets are never read. |
-| `validate-board.js` | PostToolUse (Write/Edit) | Board invariants: valid statuses (incl. `dropped`), `C-<n>` ids, no duplicate ids, one `in_progress` item, one active board (`sprint.yml`, sprint or `mode: flow`; archives in `sprints/` must be completed), one live copy per item, hierarchy rules (`type`/`parent` values, epics stay in the backlog, epic -> story -> task nesting only, containers never `ready`). |
+| `validate-board.js` | PostToolUse (Write/Edit) | Board invariants: valid statuses (incl. `dropped` and `parked`), `C-<n>` ids, no duplicate ids, one `in_progress` item (`parked` doesn't count), parked items carry `parked_at` plus a `## Resume` section in their item note, one active board (`sprint.yml`, sprint or `mode: flow`; archives in `sprints/` must be completed), one live copy per item, hierarchy rules (`type`/`parent` values, epics stay in the backlog, epic -> story -> task nesting only, containers never `ready`). |
 
 Run the hook tests with:
 
