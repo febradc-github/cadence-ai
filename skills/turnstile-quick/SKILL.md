@@ -11,7 +11,7 @@ user-invocable: false
 - The fast lane is for trivial work only: no children, no open design questions, and at most quick_max_points points -- read the ceiling with `node ${CLAUDE_PLUGIN_ROOT}/scripts/config.js` (default 3; surface any config warnings once). If sizing or approach needs discussion, it is not trivial -- refuse and route to /turnstile:refine. Never "quick" bigger work in pieces to dodge the cap.
 - One approval gate replaces refine's and spec's: do not write anything until the user confirms the item (title, criteria, points) and its destination in one go.
 - Acceptance criteria are mandatory even here -- /turnstile:review needs something checkable. They live inline in the item note; quick items get no design doc and no spec file.
-- Quick items added to a running sprint are marked added_mid_sprint: true so standup can report scope growth honestly. This lane adds visibility, never invisibility.
+- Quick items added to a running sprint are marked added_mid_sprint: true so /turnstile:board can report scope growth honestly. This lane adds visibility, never invisibility.
 - Search the vault before creating anything -- the fix or feature may already exist as a ticket or a brain note.
 - Before writing the item note, Read references/template.md from this skill's base directory and use that exact format.
 </important>

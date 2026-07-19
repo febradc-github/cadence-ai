@@ -45,6 +45,18 @@
   30-turn reference session (3 tickets), gates makes 6 curator dispatches
   (73,221 chars, ~18,305 tokens) vs opportunistic's 15 (189,618 chars,
   ~47,405 tokens) — 61.4% less capture overhead.
+- `/turnstile:pickup` replaces `/turnstile:standup`: instead of a progress
+  report, it restores work state — the in-progress ticket, its
+  implementation state, what was blocking, and the relevant
+  decision/brain notes — answering "where was I and what was I about to
+  do". It restores state from the board and vault, unlike the built-in
+  `/resume`, which restores a past conversation (the command is
+  deliberately not named `resume`). `/turnstile:standup` remains for one
+  release as a deprecated alias that prints a notice and runs pickup;
+  planned for removal in the next release. Standup's `added_mid_sprint`
+  scope-honesty summary moved to `/turnstile:board`. New contributor
+  rule in the README: command basenames must not duplicate Claude Code
+  built-ins or core mode names.
 
 ## 0.21.0 — 2026-07-18
 

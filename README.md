@@ -49,6 +49,14 @@ Every skill sets `user-invocable: false`, so the commands are the only
 entries in the `/` menu -- skills never appear there and are reachable only
 through their command wrapper or conversate's routing (via the Skill tool).
 
+Contributor rule: new command basenames must not duplicate Claude Code
+built-in commands or core mode names (`plan`, `resume`, `review`, `compact`,
+`init`, `memory`, `model`, `agents`, `mcp`, `permissions`, ...). The plugin
+namespace prevents hard collisions, but a same-named twin still confuses
+users and intent routing -- which is why work-state restoration is `pickup`
+(not `resume`) and the solo artifact is written by `refine` (no `plan`
+command exists).
+
 ## Commands
 
 | Command | Purpose |
@@ -65,7 +73,8 @@ through their command wrapper or conversate's routing (via the Skill tool).
 | `/turnstile:remember [note]` | Files a note you dictate into the vault. You author the content; the curator only files, tags, and links it. Both capture modes. |
 | `/turnstile:work [id]` | Implements one ticket with TDD. |
 | `/turnstile:review [id]` | Independent done-ness check; commits on pass. |
-| `/turnstile:standup` | Read-only progress/blocker report on the active sprint. |
+| `/turnstile:pickup` | Where was I? Read-only work-state restoration: the in-progress ticket, its implementation state, blockers, and the relevant notes, ending with the next command to run. (The built-in `/resume` restores a past conversation; pickup restores the work.) |
+| `/turnstile:standup` | Deprecated alias for `/turnstile:pickup`; removed next release. |
 | `/turnstile:board` | Read-only render of the whole board. |
 | `/turnstile:systematic-debugger [bug]` | Independent root-cause debugging. Ad hoc, not gated. |
 | `/turnstile:code-reviewer [scope]` | Advisory code/diff review. Ad hoc, not gated, never commits. |
@@ -162,8 +171,8 @@ child passes review, the parent is marked done automatically.
 Two pragmatic side doors keep the pipeline agile. `/turnstile:quick` lets
 trivial work (up to `quick_max_points` points, default 3, criteria written
 inline in the item note) enter the
-current sprint after a single approval, marked `added_mid_sprint` so standup
-reports scope growth honestly. And a reported bug becomes tracked work via
+current sprint after a single approval, marked `added_mid_sprint` so the
+board reports scope growth honestly. And a reported bug becomes tracked work via
 the debugger: related to the in-progress ticket, it's fixed within that
 ticket's diff; unrelated, it becomes a quick bug task that runs right after —
 so every fix is reviewed and committed under a ticket, and only one thing is

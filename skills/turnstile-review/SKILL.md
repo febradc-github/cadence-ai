@@ -1,6 +1,6 @@
 ---
 name: turnstile-review
-description: Dispatches the independent turnstile-reviewer agent for a done verdict; commits on PASS. Gate 2 -- the implementer never self-certifies. Dispatched by /turnstile:review or conversate routing only.
+description: Dispatches the independent turnstile-reviewer agent for a done verdict; commits on PASS. Gate 2 -- the implementer never self-certifies. A done-ness gate against acceptance criteria, not an ad-hoc code review like Claude Code's built-in /review (that is /turnstile:code-reviewer's job). Dispatched by /turnstile:review or conversate routing only.
 argument-hint: "[id]"
 user-invocable: false
 ---
