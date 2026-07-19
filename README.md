@@ -62,6 +62,7 @@ through their command wrapper or conversate's routing (via the Skill tool).
 | `/turnstile:next` | Flow mode's pull: moves the top `ready` backlog item onto the flow board as `todo` after one confirmation. No sprint ceremony. |
 | `/turnstile:quick [description]` | Fast lane: trivial work or a diagnosed bug becomes a small task in the current sprint after one approval -- no design doc, no spec. `quick_max_points` max (default 3). |
 | `/turnstile:drop [id] [reason]` | Cancels a ticket: status `dropped` with a recorded reason. History, not deletion. |
+| `/turnstile:remember [note]` | Files a note you dictate into the vault. You author the content; the curator only files, tags, and links it. Both capture modes. |
 | `/turnstile:work [id]` | Implements one ticket with TDD. |
 | `/turnstile:review [id]` | Independent done-ness check; commits on pass. |
 | `/turnstile:standup` | Read-only progress/blocker report on the active sprint. |
@@ -101,7 +102,7 @@ session; nothing else is agent-shaped.
 |---|---|---|
 | `turnstile-coder` | inherit | Language-adaptive implementation of one ticket or confirmed bug fix, test-first, matching the repo's existing conventions. Dispatched by `/turnstile:work` (self-contained tickets) and `/turnstile:systematic-debugger` (non-trivial fixes). Never commits, never touches `turnstile/` data files. |
 | `turnstile-reviewer` | opus | Independent done-ness verdict for `/turnstile:review`; judges only the criteria and the diff, read-only. |
-| `brain-curator` | haiku | Sole writer of the knowledge folders (`turnstile/brain/`, `turnstile/decisions/`, `turnstile/architecture/`, `turnstile/code/`); dispatched opportunistically when something worth remembering happens. |
+| `brain-curator` | haiku | Sole writer of the knowledge folders (`turnstile/brain/`, `turnstile/decisions/`, `turnstile/architecture/`, `turnstile/code/`). `capture: gates` (default): dispatched deterministically with bounded input at four transitions -- review passes (diff + ticket + criteria), design/plan approved, ticket dropped, debugger concludes (confirmed root cause only). `capture: opportunistic`: dispatched whenever a skill notices something worth remembering. `/turnstile:remember` reaches it in both modes. |
 | `pitch-agent` | inherit | Anchoring-free idea pitches for `/turnstile:brainstorm`'s panel: dispatched 2-3× in parallel with forced stances (minimalist, skeptic, scout) on epic-scale ideas or on request. Sees the idea summary, never the dialogue. Read-only. |
 | `loop-runner` | inherit | Executes one iteration of the ACT/OBSERVE/EVALUATE/DECIDE loop, writes outcomes to `state.json`, optionally dispatches `brain-curator` on DECIDE, and reports whether to continue. Dispatched repeatedly by `/turnstile:loop-start`. |
 
@@ -115,6 +116,9 @@ surfaced warning -- bad config never breaks the pipeline:
                            # approved plan artifact per leaf item
     cadence: sprint        # sprint | flow -- flow replaces sprint ceremony
                            # with a pull queue (/turnstile:next)
+    capture: gates         # gates | opportunistic -- when brain-curator runs:
+                           # deterministically at gate transitions, or
+                           # whenever a skill notices something memorable
     quick_max_points: 3    # the /turnstile:quick fast-lane ceiling
 
 Switching `profile` mid-project is safe: review resolves each ticket's
@@ -288,6 +292,15 @@ and 80.1% over 100 turns (65,100 → 12,972 chars); total plugin-emitted
 context fell 27% (30 turns) to 47% (100 turns), growing with session length.
 `search_notes` results are capped (default 20 notes, `limit` up to 100) so a
 broad query on a large vault cannot flood the context window.
+
+The report also compares the two capture modes side by side: each
+brain-curator dispatch loads the curator's agent body plus its note-format
+references into the curator's context, so dispatch count drives cost. Over
+the modeled 30-turn session (3 tickets, each refine -> work×3 -> review),
+`capture: gates` makes 6 dispatches (73,221 chars, ~18,305 tokens) against
+`capture: opportunistic`'s 15 (189,618 chars, ~47,405 tokens) -- a 61.4%
+cut, from anchoring capture to gate transitions instead of dispatching on
+every work pass.
 
 ## Usage
 

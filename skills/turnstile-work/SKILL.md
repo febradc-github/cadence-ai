@@ -40,7 +40,7 @@ user-invocable: false
 
 10. Implement by dispatching `turnstile-coder` with the acceptance criteria, the relevant brain notes from step 5, pointers to affected files, and any decisions gathered from the user. It works test-first and reports files changed, test results, and notes. Dispatch it for every change, no matter how small. If questions surface mid-implementation, resolve them with the user and re-dispatch; never finish the code yourself.
 11. Append to the item's `notes`: `work pass <n>: <one-line summary>`, `<n>` = prior "work pass" entries + 1.
-12. Dispatch `brain-curator` with: the source files this pass created or changed (path, one-line purpose, exports, known imports/callers -- from the coder's report) so their `turnstile/code/` notes are updated, plus anything worth remembering (a decision, a gotcha, anything the coder flagged under Notes). Fires whenever code changed; skipped only when nothing was implemented.
+12. Capture (per the capture config): in `gates` mode (default), no dispatch here -- the touched files' `turnstile/code/` notes and any decisions are captured by `/turnstile:review`'s single review-pass dispatch, keeping capture out of the implementation loop. In `opportunistic` mode, dispatch `brain-curator` with: the source files this pass created or changed (path, one-line purpose, exports, known imports/callers -- from the coder's report) so their `turnstile/code/` notes are updated, plus anything worth remembering (a decision, a gotcha, anything the coder flagged under Notes); fires whenever code changed, skipped only when nothing was implemented.
 13. Tell the user what was implemented and that `/turnstile:review <id>` is next.
 
 ## Error handling

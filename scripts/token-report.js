@@ -116,6 +116,35 @@ emissions.forEach((chars, i) => {
   perTurnCumulative += chars * (TURNS - i);
 });
 
+// --- capture modes: brain-curator dispatch overhead, side by side ---
+// The reference session (TURNS turns) is modeled as one ticket per 10 turns
+// moving refine -> spec -> sprint -> work (3 coder passes) -> review. Each
+// curator dispatch loads plugin text into the curator's context: its agent
+// body plus the note-format reference, plus the code-note reference when the
+// dispatch writes turnstile/code/ notes. Dispatch prompts are model-generated
+// and out of scope, like all non-plugin text.
+//   gates (default):  2 dispatches per ticket -- design/plan approved
+//                     (body + note-format) and review pass (body +
+//                     note-format + code-notes).
+//   opportunistic:    5 dispatches per ticket -- refine (body + note-format),
+//                     each of the 3 work passes (body + note-format +
+//                     code-notes), review estimate-mismatch (body +
+//                     note-format).
+function fileChars(rel) {
+  const abs = path.join(root, rel);
+  return fs.existsSync(abs) ? fs.readFileSync(abs, 'utf8').length : 0;
+}
+const curatorBody = body(path.join(root, 'agents', 'brain-curator.md')).length;
+const noteFormatRef = fileChars('skills/turnstile-brain/references/note-format.md');
+const codeNotesRef = fileChars('skills/turnstile-brain/references/curator-code-notes.md');
+const plainDispatch = curatorBody + noteFormatRef;
+const codeDispatch = curatorBody + noteFormatRef + codeNotesRef;
+const tickets = Math.max(1, Math.floor(TURNS / 10));
+const captureModes = {
+  gates: { dispatches: tickets * 2, chars: tickets * (plainDispatch + codeDispatch) },
+  opportunistic: { dispatches: tickets * 5, chars: tickets * (2 * plainDispatch + 3 * codeDispatch) },
+};
+
 // --- invoked: reference workflow bodies ---
 const pick = (dir, name) => path.join(root, dir, name);
 const invokedFiles = [
@@ -136,6 +165,7 @@ const report = {
   fixed: { descriptions: descriptionChars, mcpToolList: mcpChars, total: descriptionChars + mcpChars },
   perTurn: { firstTurn, repeatTurn, emittedOverSession: perTurnEmitted, cumulativeContext: perTurnCumulative },
   invoked: { referenceWorkflow: invokedChars },
+  capture: { tickets, modes: captureModes },
   totals: {
     emittedChars: descriptionChars + mcpChars + perTurnEmitted + invokedChars,
     emittedTokens: tokens(descriptionChars + mcpChars + perTurnEmitted + invokedChars),
@@ -152,6 +182,11 @@ if (asJson) {
   console.log(`  fixed (descriptions + MCP tool list): ${report.fixed.total} chars (~${tokens(report.fixed.total)} tokens)`);
   console.log(`  reminder: first turn ${firstTurn}, repeats ${repeatTurn} chars; emitted over session ${perTurnEmitted} (~${tokens(perTurnEmitted)} tokens)`);
   console.log(`  invoked bodies (reference workflow): ${invokedChars} chars (~${tokens(invokedChars)} tokens)`);
+  const g = captureModes.gates;
+  const o = captureModes.opportunistic;
+  console.log(`  capture modes (${tickets} ticket(s) over ${TURNS} turns):`);
+  console.log(`    gates:         ${g.dispatches} curator dispatches, ${g.chars} chars (~${tokens(g.chars)} tokens)`);
+  console.log(`    opportunistic: ${o.dispatches} curator dispatches, ${o.chars} chars (~${tokens(o.chars)} tokens)`);
   console.log(`  TOTAL emitted: ${t.emittedChars} chars (~${t.emittedTokens} tokens)`);
   console.log(`  TOTAL cumulative context over ${TURNS} turns: ${t.cumulativeContextChars} chars (~${t.cumulativeContextTokens} tokens)`);
 }

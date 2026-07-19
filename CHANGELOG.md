@@ -32,6 +32,19 @@
   passes review. `/turnstile:brain-init` becomes an explicit opt-in with
   a vault-size and staleness warning before anything is scanned — empty
   brain beats stale brain.
+- `capture: gates | opportunistic` (default `gates`). Gates mode
+  dispatches brain-curator deterministically at exactly four transitions,
+  each with bounded input: review passes (diff + ticket + criteria, also
+  writes the touched files' code notes), design/plan approved, ticket
+  dropped (dead-end note), systematic-debugger concludes (confirmed root
+  cause only, never mid-investigation guesses). Opportunistic mode keeps
+  the previous whenever-something-is-memorable behavior. New
+  `/turnstile:remember [note]` in both modes: the user dictates the
+  content, the curator only files, tags, and links it.
+  `scripts/token-report.js` now models both modes side by side: over the
+  30-turn reference session (3 tickets), gates makes 6 curator dispatches
+  (73,221 chars, ~18,305 tokens) vs opportunistic's 15 (189,618 chars,
+  ~47,405 tokens) — 61.4% less capture overhead.
 
 ## 0.21.0 — 2026-07-18
 

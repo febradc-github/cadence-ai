@@ -20,7 +20,7 @@ user-invocable: false
 3. If the item is a container (epic or story with children), list its non-done children and ask whether they drop too -- a dropped parent with live children is usually a mistake. If the user insists on parent-only, warn that the children now reference a dropped parent. Drop each confirmed child the same way.
 4. Confirm: item id and title, current status and location, and the reason (from `$ARGUMENTS`, or ask -- a few words suffice).
 5. Once confirmed, for the item (and each confirmed child): set `status: dropped` in its board file and set `updated` to today (backlog items) or append `dropped: <reason>` to `notes` (sprint items); update its item note -- set `updated`, add a line `Dropped <YYYY-MM-DD>: <reason>` under the heading.
-6. If the reason is a process learning (e.g. repeatedly planning work that gets cancelled), dispatch `brain-curator` with it.
+6. Capture (per the capture config): in `gates` mode (default), always dispatch `brain-curator` with bounded input -- the dropped item and its recorded reason -- captured as a dead-end note, so abandoned directions are findable before someone walks them again. In `opportunistic` mode, dispatch only if the reason is a process learning (e.g. repeatedly planning work that gets cancelled).
 7. Tell the user what was dropped and where the record lives.
 
 ## Error handling
