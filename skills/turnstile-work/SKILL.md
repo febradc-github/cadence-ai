@@ -9,7 +9,7 @@ user-invocable: false
 
 <important>
 - Refuse assignee: human items -- tell the user it's tracked as human-owned, don't implement it.
-- Only one item in the active sprint may be in_progress at a time. If a different item is already in_progress, refuse and tell the user to finish it (move it to review or done) first -- this keeps /turnstile:review's diff scoped to one ticket.
+- Only one item on the active board may be in_progress at a time. If a different item is already in_progress, refuse and tell the user to finish it (move it to review or done) first -- or stash it with /turnstile:park if this work is the more urgent -- this keeps /turnstile:review's diff scoped to one ticket. Parked items do not count.
 - Search the vault (brain, decisions, architecture, item notes) before writing any code. If something related already exists, surface it -- don't rebuild it blind.
 - Follow TDD: write the failing test first, then the minimal code to pass it. Defer to superpowers:test-driven-development if installed.
 - Never write or edit source files from this skill. Every code change -- including docstrings, comments, renames, formatting, and "one-line" fixes -- is implemented by dispatching the turnstile-coder agent. There is no change small enough to do inline. "It's just a comment", "dispatching is overkill", "I'll add it directly" -- each of those thoughts is the bug: stop and dispatch.
@@ -19,9 +19,9 @@ user-invocable: false
 
 ## Process
 
-1. Look up `<id>` (from `$ARGUMENTS`) in the current sprint -- `turnstile/sprint.yml`, or (legacy) the root `turnstile/sprint-<N>.yml` with `sprint.status: active`. No active sprint, or id not in it: tell the user and suggest `/turnstile:sprint-plan` (or `/turnstile:quick` for small work).
+1. Look up `<id>` (from `$ARGUMENTS`) in the current board -- `turnstile/sprint.yml` (a sprint or a `mode: flow` board), or (legacy) the root `turnstile/sprint-<N>.yml` with `sprint.status: active`. No active board, or id not on it: tell the user and suggest `/turnstile:sprint-plan` -- `/turnstile:next` in `cadence: flow` -- (or `/turnstile:quick` for small work).
 2. `assignee: human`: refuse and point the user at the item.
-3. `status` not `todo` or `in_progress` (never planned in, or mid-`review`): refuse and redirect to the correct earlier step.
+3. `status` not `todo` or `in_progress` (never planned in, mid-`review`, or `parked`): refuse and redirect to the correct step -- for a `parked` item, `/turnstile:pickup` un-parks it with its resume context.
 4. Another item already `in_progress`: refuse; the user finishes it via `/turnstile:review` first.
 5. Search the vault for notes related to this ticket's topic. Surface anything relevant, including conflicts, before writing code. Pay particular attention to `adr-*` and `AR-*` notes touching this area: the implementation must not silently contradict a recorded decision.
 6. Read the ticket's spec -- `turnstile/specs/SP-<n>.md` (`<n>` from `<id>` = `C-<n>`), falling back to legacy names (`turnstile/specs/<id>-*-spec.md`, `turnstile/specs/<id>.md`). No spec file means a quick-lane item: its criteria live in the item note's "## Acceptance criteria" section. If the item has a `parent`, also read the parent chain's design docs (`DS-<parent n>`, or legacy names) -- the umbrella rationale often settles questions the leaf spec doesn't repeat.
@@ -40,7 +40,7 @@ user-invocable: false
 
 10. Implement by dispatching `turnstile-coder` with the acceptance criteria, the relevant brain notes from step 5, pointers to affected files, and any decisions gathered from the user. It works test-first and reports files changed, test results, and notes. Dispatch it for every change, no matter how small. If questions surface mid-implementation, resolve them with the user and re-dispatch; never finish the code yourself.
 11. Append to the item's `notes`: `work pass <n>: <one-line summary>`, `<n>` = prior "work pass" entries + 1.
-12. Dispatch `brain-curator` with: the source files this pass created or changed (path, one-line purpose, exports, known imports/callers -- from the coder's report) so their `turnstile/code/` notes are updated, plus anything worth remembering (a decision, a gotcha, anything the coder flagged under Notes). Fires whenever code changed; skipped only when nothing was implemented.
+12. Capture (per the capture config): in `gates` mode (default), no dispatch here -- the touched files' `turnstile/code/` notes and any decisions are captured by `/turnstile:review`'s single review-pass dispatch, keeping capture out of the implementation loop. In `opportunistic` mode, dispatch `brain-curator` with: the source files this pass created or changed (path, one-line purpose, exports, known imports/callers -- from the coder's report) so their `turnstile/code/` notes are updated, plus anything worth remembering (a decision, a gotcha, anything the coder flagged under Notes); fires whenever code changed, skipped only when nothing was implemented.
 13. Tell the user what was implemented and that `/turnstile:review <id>` is next.
 
 ## Error handling

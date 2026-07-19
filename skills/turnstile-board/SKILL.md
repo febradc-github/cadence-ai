@@ -17,7 +17,7 @@ Renders the full board -- backlog plus active sprint -- as a readable snapshot, 
 ## Process
 
 1. Read `turnstile/backlog.yml` (if it exists). Render its items as a table: id, title, type (`epic`/`story`/`task`; blank means story), status (`idea`/`ready`/`done`/`dropped`), points. Group hierarchically: each epic first, its children indented beneath it (and their tasks beneath them), then flat items. For every container, append child progress to its row: `<done children>/<total children> done`, counting children across the backlog, `sprint.yml`, and `sprints/*.yml`. Render `dropped` items last, marked as cancelled.
-2. Read the current sprint -- `turnstile/sprint.yml`, or (legacy boards) the root `turnstile/sprint-*.yml` with `sprint.status: active`. Render its goal and items as a table: id, title, parent (when set), status (`todo`/`in_progress`/`review`/`done`/`dropped`), points, carryovers, and a `+` marker on items with `added_mid_sprint: true`.
+2. Read the current board -- `turnstile/sprint.yml` (a sprint or a `mode: flow` board), or (legacy boards) the root `turnstile/sprint-*.yml` with `sprint.status: active`. Render its goal (sprints only) and items as a table: id, title, parent (when set), status (`todo`/`in_progress`/`review`/`done`/`dropped`), points, carryovers, and a `+` marker on items with `added_mid_sprint: true`. Then report scope honestly: total points, points `done`, and -- if any item has `added_mid_sprint: true` -- "N of M points were added mid-sprint" so quiet scope growth stays visible.
 3. If neither file exists yet, tell the user the board is empty and suggest `/turnstile:refine <idea>` to start.
 
 ## Inputs

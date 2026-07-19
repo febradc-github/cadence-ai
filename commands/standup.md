@@ -1,6 +1,6 @@
 ---
+description: Deprecated alias for /turnstile:pickup -- will be removed in the next release.
 disable-model-invocation: true
-description: Read-only progress and blockers report for the active sprint.
 ---
 
-Use the Skill tool to invoke the `turnstile-standup` skill.
+First tell the user: "/turnstile:standup is deprecated and will be removed in the next release; use /turnstile:pickup." Then use the Skill tool to invoke the `turnstile-pickup` skill.

@@ -2,9 +2,10 @@
 
 A gate-first workflow plugin for Claude Code. One ticket at a time, nothing
 ships without passing its gate: idea → design → spec → sprint → review → done.
-Turnstile tracks work on a YAML board, maintains a persistent Obsidian-linked
-knowledge brain across sessions, and drives autonomous goal loops when you need
-sustained iteration without manual steering.
+Turnstile tracks work on a YAML board, maintains a persistent wikilinked
+markdown knowledge brain across sessions (viewable as a graph in Obsidian,
+which is optional), and drives autonomous goal loops when you need sustained
+iteration without manual steering.
 
 ## Requirements
 
@@ -49,27 +50,39 @@ Every skill sets `user-invocable: false`, so the commands are the only
 entries in the `/` menu -- skills never appear there and are reachable only
 through their command wrapper or conversate's routing (via the Skill tool).
 
+Contributor rule: new command basenames must not duplicate Claude Code
+built-in commands or core mode names (`plan`, `resume`, `review`, `compact`,
+`init`, `memory`, `model`, `agents`, `mcp`, `permissions`, ...). The plugin
+namespace prevents hard collisions, but a same-named twin still confuses
+users and intent routing -- which is why work-state restoration is `pickup`
+(not `resume`) and the solo artifact is written by `refine` (no `plan`
+command exists).
+
 ## Commands
 
 | Command | Purpose |
 |---|---|
 | `/turnstile:conversate [message]` | Casual entry point; classifies intent and directly invokes the right skill. |
 | `/turnstile:brainstorm [idea]` | Loose, exploratory idea-shaping. No file writes. Hands off to refine. |
-| `/turnstile:refine [idea]` | Gap-closing dialogue; writes a design doc for approval. Epic-sized ideas are recorded as epics and handed to breakdown. |
+| `/turnstile:refine [idea]` | Gap-closing dialogue; writes a design doc for approval (in `profile: solo`, a single plan artifact whose approval marks the item `ready`). Epic-sized ideas are recorded as epics and handed to breakdown. |
 | `/turnstile:breakdown [id]` | Decomposes an epic into user stories, or an oversized story into tasks; requires approval. |
-| `/turnstile:spec [id]` | Turns an approved design into a checkable spec; requires approval. |
-| `/turnstile:sprint-plan` | Starts a new sprint; archives the finished one; recommends which ready items to pull in and proposes a goal; rolls over unfinished work. |
-| `/turnstile:quick [description]` | Fast lane: trivial work or a diagnosed bug becomes a small task in the current sprint after one approval -- no design doc, no spec. 2 points max. |
+| `/turnstile:spec [id]` | Turns an approved design into a checkable spec; requires approval. (`profile: solo`: the refine plan already covered this -- explains and points onward.) |
+| `/turnstile:sprint-plan` | Starts a new sprint; archives the finished one; recommends which ready items to pull in and proposes a goal; rolls over unfinished work. (`cadence: flow`: explains the mode and offers to archive a leftover sprint instead.) |
+| `/turnstile:next` | Flow mode's pull: moves the top `ready` backlog item onto the flow board as `todo` after one confirmation. No sprint ceremony. |
+| `/turnstile:quick [description]` | Fast lane: trivial work or a diagnosed bug becomes a small task in the current sprint after one approval -- no design doc, no spec. `quick_max_points` max (default 3). |
 | `/turnstile:drop [id] [reason]` | Cancels a ticket: status `dropped` with a recorded reason. History, not deletion. |
+| `/turnstile:remember [note]` | Files a note you dictate into the vault. You author the content; the curator only files, tags, and links it. Both capture modes. |
 | `/turnstile:work [id]` | Implements one ticket with TDD. |
 | `/turnstile:review [id]` | Independent done-ness check; commits on pass. |
-| `/turnstile:standup` | Read-only progress/blocker report on the active sprint. |
+| `/turnstile:pickup` | Where was I? Read-only work-state restoration: the in-progress ticket, its implementation state, blockers, and the relevant notes, ending with the next command to run. Offers to un-park the most recently parked ticket when nothing is in progress. (The built-in `/resume` restores a past conversation; pickup restores the work.) |
+| `/turnstile:park [reason]` | Stashes the in-progress ticket: status `parked` with a `parked_at` timestamp and a resume note (current state, next step, blockers) in the item note, so urgent unrelated work can start. |
+| `/turnstile:standup` | Deprecated alias for `/turnstile:pickup`; removed next release. |
 | `/turnstile:board` | Read-only render of the whole board. |
 | `/turnstile:systematic-debugger [bug]` | Independent root-cause debugging. Ad hoc, not gated. |
 | `/turnstile:code-reviewer [scope]` | Advisory code/diff review. Ad hoc, not gated, never commits. |
-| `/turnstile:install-obsidian` | One-time setup: installs Obsidian via the OS package manager (with confirmation) and scaffolds `turnstile/.obsidian/` as a working vault. Idempotent. |
+| `/turnstile:install-obsidian` | Optional convenience tooling -- nothing in the pipeline needs it. One-time setup: installs Obsidian via the OS package manager (with confirmation) and scaffolds `turnstile/.obsidian/` as a working vault. Idempotent. |
 | `/turnstile:obsidian-graph` | Opens `turnstile/` in Obsidian and points you at Graph View (Ctrl+G / Cmd+G). |
-| `/turnstile:brain-init` | Bulk-documents every source file as a linked `turnstile/code/` note (purpose, imports, exports, callers). Re-runnable; only adds missing notes. |
+| `/turnstile:brain-init` | Opt-in bulk mode: documents every source file as a linked `turnstile/code/` note after an explicit size/staleness warning. The default is lazy -- notes are written for ticket-touched files at review. Re-runnable; only adds missing notes. |
 
 ## Loop runner
 
@@ -100,17 +113,56 @@ session; nothing else is agent-shaped.
 |---|---|---|
 | `turnstile-coder` | inherit | Language-adaptive implementation of one ticket or confirmed bug fix, test-first, matching the repo's existing conventions. Dispatched by `/turnstile:work` (self-contained tickets) and `/turnstile:systematic-debugger` (non-trivial fixes). Never commits, never touches `turnstile/` data files. |
 | `turnstile-reviewer` | opus | Independent done-ness verdict for `/turnstile:review`; judges only the criteria and the diff, read-only. |
-| `brain-curator` | haiku | Sole writer of the knowledge folders (`turnstile/brain/`, `turnstile/decisions/`, `turnstile/architecture/`, `turnstile/code/`); dispatched opportunistically when something worth remembering happens. |
+| `brain-curator` | haiku | Sole writer of the knowledge folders (`turnstile/brain/`, `turnstile/decisions/`, `turnstile/architecture/`, `turnstile/code/`). `capture: gates` (default): dispatched deterministically with bounded input at four transitions -- review passes (diff + ticket + criteria), design/plan approved, ticket dropped, debugger concludes (confirmed root cause only). `capture: opportunistic`: dispatched whenever a skill notices something worth remembering. `/turnstile:remember` reaches it in both modes. |
 | `pitch-agent` | inherit | Anchoring-free idea pitches for `/turnstile:brainstorm`'s panel: dispatched 2-3× in parallel with forced stances (minimalist, skeptic, scout) on epic-scale ideas or on request. Sees the idea summary, never the dialogue. Read-only. |
 | `loop-runner` | inherit | Executes one iteration of the ACT/OBSERVE/EVALUATE/DECIDE loop, writes outcomes to `state.json`, optionally dispatches `brain-curator` on DECIDE, and reports whether to continue. Dispatched repeatedly by `/turnstile:loop-start`. |
 
+## Configuration
+
+Optional per-project settings in `turnstile/config.yml`; a missing file (or
+key) means the default, and invalid values fall back to the default with a
+surfaced warning -- bad config never breaks the pipeline:
+
+    profile: full          # solo | full -- solo merges design+spec into one
+                           # approved plan artifact per leaf item
+    cadence: sprint        # sprint | flow -- flow replaces sprint ceremony
+                           # with a pull queue (/turnstile:next)
+    capture: gates         # gates | opportunistic -- when brain-curator runs:
+                           # deterministically at gate transitions, or
+                           # whenever a skill notices something memorable
+    quick_max_points: 3    # the /turnstile:quick fast-lane ceiling
+
+Switching `profile` mid-project is safe: review resolves each ticket's
+criteria per ticket (spec, then plan, then item note), so artifacts from
+both profiles coexist. Switching `cadence` to flow requires no active
+sprint -- archive the current one first (`/turnstile:sprint-plan` in flow
+mode offers exactly that step).
+
 ## Workflow
+
+Full profile (the default):
 
     rough idea --(/turnstile:brainstorm)--> shaped idea
                --(/turnstile:refine)------> design approved
                --(/turnstile:spec)--------> spec approved --> ready
                --(/turnstile:sprint-plan)-> todo --> in_progress
                --(/turnstile:review, passes)--> done
+
+Solo profile collapses the two entrance gates into one -- refine writes a
+single plan artifact (`plans/PL-<n>.md`, design and acceptance criteria
+together) and one approval marks the item `ready`; the review gate is
+identical in both profiles:
+
+    rough idea --(/turnstile:brainstorm)--> shaped idea
+               --(/turnstile:refine)------> plan approved --> ready
+               --(/turnstile:sprint-plan)-> todo --> in_progress
+               --(/turnstile:review, passes)--> done
+
+With `cadence: flow` there is no sprint step in either profile: `ready`
+items form a queue in the backlog and `/turnstile:next` pulls the top one
+onto the flow board (`sprint.yml` with a `mode: flow` marker -- same file,
+same invariants, never archived) as `todo`. Everything else -- work,
+review, quick, drop -- behaves identically in both cadences.
 
 Epic-sized ideas take a detour: `/turnstile:refine` records them as `type: epic`
 and `/turnstile:breakdown` splits them into user stories (and oversized stories
@@ -119,33 +171,43 @@ sprint on its own. Epics and other parents never enter a sprint; when the last
 child passes review, the parent is marked done automatically.
 
 Two pragmatic side doors keep the pipeline agile. `/turnstile:quick` lets
-trivial work (≤2 points, criteria written inline in the item note) enter the
-current sprint after a single approval, marked `added_mid_sprint` so standup
-reports scope growth honestly. And a reported bug becomes tracked work via
+trivial work (up to `quick_max_points` points, default 3, criteria written
+inline in the item note) enter the
+current sprint after a single approval, marked `added_mid_sprint` so the
+board reports scope growth honestly. And a reported bug becomes tracked work via
 the debugger: related to the in-progress ticket, it's fixed within that
 ticket's diff; unrelated, it becomes a quick bug task that runs right after —
 so every fix is reviewed and committed under a ticket, and only one thing is
-ever in progress.
+ever in progress. When the interrupt cannot wait, `/turnstile:park` stashes
+the in-progress ticket (status `parked`, resume note in the item note) so
+the urgent work starts clean; `/turnstile:pickup` restores the parked ticket
+later with its full resume context.
 
 `/turnstile:conversate` classifies a message and drives this pipeline directly
 instead of requiring each command to be typed by hand.
 
 ## Data
 
-Turnstile reads and writes a `turnstile/` folder in your project repo. The whole
-folder is an Obsidian vault; every markdown file in it follows one shared
-note format (frontmatter + wikilinks), so items, designs, specs, decisions,
-architecture, code, and brain notes all interconnect in Graph View:
+Turnstile reads and writes a `turnstile/` folder in your project repo. It is
+plain markdown plus YAML: every note follows one shared format (frontmatter
++ `[[wikilinks]]`), so items, designs, specs, decisions, architecture, code,
+and brain notes all interconnect -- greppable, diffable, and readable in any
+editor. Nothing in the pipeline requires Obsidian: the folder happens to be
+a valid Obsidian vault, and Obsidian is the optional viewer that renders the
+link structure as a browsable graph, not a dependency.
 
     turnstile/
+      config.yml                        # optional settings (see Configuration)
       backlog.yml                       # unplanned work: idea -> ready (or dropped)
       sprint.yml                        # the current sprint -- always this filename
+                                        #   (in cadence: flow, the flow board: mode: flow)
       sprints/sprint-<N>.yml            # completed sprints, immutable archive
       epics/EP-<n>.md                   # one item note per epic
       user-stories/US-<n>.md            # one item note per user story
       tasks/TK-<n>.md                   # one item note per task
-      designs/DS-<n>.md                 # design doc per item
-      specs/SP-<n>.md                   # spec per leaf item
+      designs/DS-<n>.md                 # design doc per item (profile: full)
+      specs/SP-<n>.md                   # spec per leaf item (profile: full)
+      plans/PL-<n>.md                   # merged design+spec per leaf item (profile: solo)
       architecture/AR-<topic>.md        # how the system is shaped
       decisions/adr-<NNN>-<slug>.md     # why it is shaped that way (ADRs)
       brain/*.md, brain/moc-<topic>.md  # domain/process knowledge, MOCs
@@ -155,11 +217,12 @@ architecture, code, and brain notes all interconnect in Graph View:
 
 Ticket ids are `C-<n>` -- a single shared counter
 for every item so a number is minted exactly once. `<n>` is that same number:
-ticket `C-7` maps to `EP-7`/`US-7`/`TK-7` (by type) plus `DS-7` and `SP-7`,
-so one number traces a ticket across every folder.
+ticket `C-7` maps to `EP-7`/`US-7`/`TK-7` (by type) plus `DS-7` and `SP-7`
+(or `PL-7` in the solo profile), so one number traces a ticket across every
+folder.
 
 The YAML board holds tracking fields only (id, title, type, parent, status,
-points, assignee, carryovers, notes) -- descriptions live in the item notes
+points, assignee, carryovers, parked_at, notes) -- descriptions live in the item notes
 and acceptance criteria in the specs, so no fact has two copies that can
 drift. Links always use these typed names (`[[US-7]]`, `[[DS-7]]`) because
 Obsidian resolves wikilinks by exact filename only -- aliases never resolve a
@@ -169,14 +232,20 @@ it. Older boards keep working: legacy flat `designs/<id>.md` / `specs/<id>.md`
 and 0.10-style slug names are read as fallbacks and migrated
 opportunistically.
 
-Run `/turnstile:install-obsidian` once to install Obsidian (if needed) and
-configure `turnstile/` as a vault, then open that folder in Obsidian to browse
-everything as a linked graph. Notes use hierarchical tags (`api/auth`) and
+Want the graph view? `/turnstile:install-obsidian` is optional convenience
+tooling: run it once to install Obsidian (if needed, with confirmation) and
+configure `turnstile/` as a vault, then open that folder in Obsidian to
+browse everything as a linked graph. Skipping it changes nothing about the
+workflow -- every gate, note, and hook works on the plain files. Notes use
+hierarchical tags (`api/auth`) and
 hub notes (`moc-<topic>.md`, Maps of Content) so the graph stays navigable as
-it grows; the brain-curator agent maintains both. `/turnstile:brain-init`
-bootstraps `turnstile/code/` -- one note per source file with its imports,
-exports, and callers -- and work sessions keep those notes current through
-the same brain-curator dispatches.
+it grows; the brain-curator agent maintains both. `turnstile/code/` notes
+are lazy by default: a file gets (or refreshes) its note when a ticket that
+touched it passes review, so coverage tracks what actually changes and an
+empty brain beats a stale one. `/turnstile:brain-init` is the opt-in eager
+alternative -- it bulk-documents every source file after an explicit
+warning that the vault grows with the repo and untouched files' notes
+start aging immediately.
 
 Board files may be hand-edited; the validation hook (below) checks every
 write, and the skills surface parse errors instead of auto-repairing.
@@ -190,7 +259,7 @@ with a `turnstile/` directory, except the commit guard, which is safe anywhere):
 |---|---|---|
 | `remind.js` | UserPromptSubmit | Injects the full gate rules on the first prompt of a session (refreshed every 30 prompts so it survives context compaction) and a one-line anchor on every other prompt; flags hand-edited knowledge notes and stray link-hijacking notes (Obsidian click-artifacts that shadow ticket-id aliases). Session tracking lives in `turnstile/.remind-state.json`. |
 | `guard.js` | PreToolUse (all file + shell tools) | Blocks `git commit --no-verify` and Anthropic/Claude attribution lines; blocks any access to env files (`.env`, `.env.*`, `*.env`, `.envrc`) by path, glob, or shell command -- secrets are never read. |
-| `validate-board.js` | PostToolUse (Write/Edit) | Board invariants: valid statuses (incl. `dropped`), `C-<n>` ids, no duplicate ids, one `in_progress` item, one active sprint (`sprint.yml`; archives in `sprints/` must be completed), one live copy per item, hierarchy rules (`type`/`parent` values, epics stay in the backlog, epic -> story -> task nesting only, containers never `ready`). |
+| `validate-board.js` | PostToolUse (Write/Edit) | Board invariants: valid statuses (incl. `dropped` and `parked`), `C-<n>` ids, no duplicate ids, one `in_progress` item (`parked` doesn't count), parked items carry `parked_at` plus a `## Resume` section in their item note, one active board (`sprint.yml`, sprint or `mode: flow`; archives in `sprints/` must be completed), one live copy per item, hierarchy rules (`type`/`parent` values, epics stay in the backlog, epic -> story -> task nesting only, containers never `ready`). |
 
 Run the hook tests with:
 
@@ -243,6 +312,15 @@ and 80.1% over 100 turns (65,100 → 12,972 chars); total plugin-emitted
 context fell 27% (30 turns) to 47% (100 turns), growing with session length.
 `search_notes` results are capped (default 20 notes, `limit` up to 100) so a
 broad query on a large vault cannot flood the context window.
+
+The report also compares the two capture modes side by side: each
+brain-curator dispatch loads the curator's agent body plus its note-format
+references into the curator's context, so dispatch count drives cost. Over
+the modeled 30-turn session (3 tickets, each refine -> work×3 -> review),
+`capture: gates` makes 6 dispatches (73,221 chars, ~18,305 tokens) against
+`capture: opportunistic`'s 15 (189,618 chars, ~47,405 tokens) -- a 61.4%
+cut, from anchoring capture to gate transitions instead of dispatching on
+every work pass.
 
 ## Usage
 

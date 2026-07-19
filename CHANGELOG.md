@@ -1,5 +1,101 @@
 # Changelog
 
+## 0.22.0 — 2026-07-19
+
+Solo-dev release: a team process reshaped into a lightweight loop with
+heavyweight verification. The entrance ceremony softens (solo profile, flow
+cadence, a higher quick ceiling), the exit gates stay iron (the independent
+reviewer, the board invariants, and every guard-hook rule are untouched),
+and the knowledge brain becomes a cheap side effect of finishing work
+(gate-anchored capture, lazy code notes) instead of a standing cost.
+
+Measured with `scripts/token-report.js` (30-turn reference session, 3
+tickets) against a git worktree of 0.21.0: session-emitted plugin context
+grows 42,427 -> 48,446 chars (+14.2%, ~1,500 tokens — four new commands and
+the richer capture/park rules), while default capture overhead falls
+182,163 -> 73,221 chars (−59.8%), because `capture: gates` makes 6 bounded
+curator dispatches where the old opportunistic behavior made 15. Net
+plugin-driven text under defaults: 224,590 -> 121,667 chars (−45.8%).
+
+- New per-project settings file `turnstile/config.yml`, read by the
+  dependency-free `scripts/config.js` (CLI: one JSON line). Missing file
+  means defaults; unknown keys are ignored and invalid values fall back to
+  defaults, each with a warning the reading skill surfaces once — bad
+  config never breaks the pipeline.
+- `profile: solo | full` (default `full`). Solo collapses the design and
+  spec gates for leaf items into one plan artifact —
+  `turnstile/plans/PL-<n>.md`, design and acceptance criteria together —
+  written by `/turnstile:refine`; one approval marks the item `ready`.
+  Epics use the full breakdown pipeline in both profiles. `/turnstile:spec`
+  explains instead of failing when a plan already covers the item.
+  `/turnstile:review` resolves criteria per ticket (SP → PL → item note),
+  so switching profile mid-project is safe and mixed artifacts coexist.
+  The review gate is unchanged in both profiles.
+- `/turnstile:quick` ceiling raised from 2 to 3 points and made
+  configurable (`quick_max_points`). The `added_mid_sprint` honesty flag
+  is unchanged.
+- `cadence: sprint | flow` (default `sprint`). Flow has no sprint
+  ceremony: `ready` items queue in the backlog and the new
+  `/turnstile:next` pulls the top one onto the flow board — `sprint.yml`
+  with a `mode: flow` marker, so every board hook and invariant applies
+  unchanged. `/turnstile:sprint-plan` in flow mode explains the mode,
+  offers to archive a leftover sprint (the required step before the
+  switch takes effect), and points to `/turnstile:next`.
+  `validate-board.js` validates the `mode` header (`sprint`/`flow`).
+- The brain is lazy by default: `turnstile/code/` notes are created or
+  updated only for files a ticket touched, at the moment the ticket
+  passes review. `/turnstile:brain-init` becomes an explicit opt-in with
+  a vault-size and staleness warning before anything is scanned — empty
+  brain beats stale brain.
+- `capture: gates | opportunistic` (default `gates`). Gates mode
+  dispatches brain-curator deterministically at exactly four transitions,
+  each with bounded input: review passes (diff + ticket + criteria, also
+  writes the touched files' code notes), design/plan approved, ticket
+  dropped (dead-end note), systematic-debugger concludes (confirmed root
+  cause only, never mid-investigation guesses). Opportunistic mode keeps
+  the previous whenever-something-is-memorable behavior. New
+  `/turnstile:remember [note]` in both modes: the user dictates the
+  content, the curator only files, tags, and links it.
+  `scripts/token-report.js` now models both modes side by side: over the
+  30-turn reference session (3 tickets), gates makes 6 curator dispatches
+  (73,221 chars, ~18,305 tokens) vs opportunistic's 15 (189,618 chars,
+  ~47,405 tokens) — 61.4% less capture overhead.
+- `/turnstile:pickup` replaces `/turnstile:standup`: instead of a progress
+  report, it restores work state — the in-progress ticket, its
+  implementation state, what was blocking, and the relevant
+  decision/brain notes — answering "where was I and what was I about to
+  do". It restores state from the board and vault, unlike the built-in
+  `/resume`, which restores a past conversation (the command is
+  deliberately not named `resume`). `/turnstile:standup` remains for one
+  release as a deprecated alias that prints a notice and runs pickup;
+  planned for removal in the next release. Standup's `added_mid_sprint`
+  scope-honesty summary moved to `/turnstile:board`. New contributor
+  rule in the README: command basenames must not duplicate Claude Code
+  built-ins or core mode names.
+- New `/turnstile:park [reason]` and `parked` status: stashes the single
+  `in_progress` ticket with a `parked_at` timestamp on the board and a
+  resume note (current state, next step, blockers) in the item note, so
+  urgent unrelated work can start while the one-`in_progress` invariant
+  holds — parked items don't count against it. `/turnstile:pickup` with
+  nothing in progress offers to un-park the most recently parked ticket,
+  reading its resume note first; the `## Resume` section stays as history
+  after un-parking. `validate-board.js` enforces both invariants on live
+  boards (parked ⇒ `parked_at` present, and a shallow check that the item
+  note exists with a `## Resume` heading — it never parses note structure
+  beyond that).
+- Rename hygiene: every leftover "cadence" reference from the plugin's
+  old name is now "turnstile" — hook messages and reminder text, skill and
+  agent prose, JS identifiers (`cadenceDir` → `turnstileDir`), the
+  `cadence-ai` marketplace name (now `turnstile`, matching the README
+  install steps). The `cadence: sprint | flow` config setting keeps its
+  name: there it means the work rhythm, not the old plugin name.
+- Obsidian decoupled in framing: the vault is plain markdown with
+  wikilinks — greppable, diffable, readable in any editor — and Obsidian
+  is the optional viewer, not a dependency. Nothing in the pipeline
+  requires it. `/turnstile:install-obsidian` stays as explicitly optional
+  convenience tooling (README Data section, command, and skill
+  descriptions reworded; no behavior change).
+
 ## 0.21.0 — 2026-07-18
 
 - Renamed plugin display name to **Turnstile** (`plugin.json`, `marketplace.json`, README).

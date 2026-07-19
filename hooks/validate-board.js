@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// PostToolUse validator for cadence board files: backlog.yml, sprint.yml (the
+// PostToolUse validator for turnstile board files: backlog.yml, sprint.yml (the
 // current sprint), sprints/sprint-N.yml (archives), and legacy root
 // sprint-N.yml. Structural checks only -- no YAML dependency. Exit 2 feeds
 // the problems back to Claude so the bad write is corrected immediately.
@@ -7,8 +7,18 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const ITEM_STATUSES = new Set(['todo', 'in_progress', 'review', 'done', 'dropped']);
+// profile: solo (turnstile/config.yml) changes which artifacts the skills
+// write (PL-<n> plans instead of DS/SP), not the board's states -- solo items
+// still move idea/ready -> todo -> in_progress -> review -> done, so no
+// profile-specific invariants exist here.
+const ITEM_STATUSES = new Set(['todo', 'in_progress', 'review', 'done', 'dropped', 'parked']);
 const SPRINT_STATUSES = new Set(['active', 'completed']);
+// cadence: flow (turnstile/config.yml) reuses sprint.yml with a mode: flow
+// header marker, so every sprint invariant (one active board, one
+// in_progress, one live copy) applies to the flow queue unchanged. Switching
+// cadence requires no active board of the other mode -- the skills enforce
+// that by archiving first; here both modes validate identically.
+const BOARD_MODES = new Set(['sprint', 'flow']);
 const ITEM_TYPES = new Set(['epic', 'story', 'task']);
 
 // Returns { sprintStatus, items: [{id, status, type, parent}], problems: [] }
@@ -26,14 +36,14 @@ function scanBoardFile(filePath, kind, label) {
     }
     const idMatch = line.match(/^\s*-\s+id:\s*["']?(\S+?)["']?\s*$/);
     if (idMatch && inItems) {
-      current = { id: idMatch[1], status: null, type: null, parent: null };
+      current = { id: idMatch[1], status: null, type: null, parent: null, parked_at: null };
       items.push(current);
       if (!/^C-\d+$/.test(current.id)) {
         problems.push(`${label}: id "${current.id}" does not match C-<number>`);
       }
       continue;
     }
-    const fieldMatch = line.match(/^\s*(status|type|parent):\s*["']?(\S+?)["']?\s*$/);
+    const fieldMatch = line.match(/^\s*(status|type|parent|mode|parked_at):\s*["']?(\S+?)["']?\s*$/);
     if (!fieldMatch) continue;
     const [, field, value] = fieldMatch;
     if (inItems && current) {
@@ -56,6 +66,10 @@ function scanBoardFile(filePath, kind, label) {
       if (!SPRINT_STATUSES.has(value)) {
         problems.push(`${label}: sprint status "${value}" is invalid (allowed: active, completed)`);
       }
+    } else if (!inItems && kind === 'sprint' && field === 'mode') {
+      if (!BOARD_MODES.has(value)) {
+        problems.push(`${label}: board mode "${value}" is invalid (allowed: ${[...BOARD_MODES].join(', ')})`);
+      }
     }
   }
   const seen = new Set();
@@ -66,9 +80,9 @@ function scanBoardFile(filePath, kind, label) {
   return { sprintStatus, items, problems };
 }
 
-function validate(cadenceDir) {
+function validate(turnstileDir) {
   const problems = [];
-  const backlogPath = path.join(cadenceDir, 'backlog.yml');
+  const backlogPath = path.join(turnstileDir, 'backlog.yml');
   const backlogById = new Map(); // id -> item, backlog only (parents live there)
   let backlogItems = [];
   if (fs.existsSync(backlogPath)) {
@@ -81,12 +95,12 @@ function validate(cadenceDir) {
   // Sprint boards: sprint.yml (current), legacy root sprint-N.yml, and
   // sprints/ archives (which must be completed).
   const boards = [];
-  const sprintPath = path.join(cadenceDir, 'sprint.yml');
+  const sprintPath = path.join(turnstileDir, 'sprint.yml');
   if (fs.existsSync(sprintPath)) boards.push({ file: sprintPath, label: 'sprint.yml', archive: false });
-  for (const f of fs.readdirSync(cadenceDir).filter((f) => /^sprint-\d+\.yml$/.test(f)).sort()) {
-    boards.push({ file: path.join(cadenceDir, f), label: f, archive: false });
+  for (const f of fs.readdirSync(turnstileDir).filter((f) => /^sprint-\d+\.yml$/.test(f)).sort()) {
+    boards.push({ file: path.join(turnstileDir, f), label: f, archive: false });
   }
-  const archiveDir = path.join(cadenceDir, 'sprints');
+  const archiveDir = path.join(turnstileDir, 'sprints');
   if (fs.existsSync(archiveDir)) {
     for (const f of fs.readdirSync(archiveDir).filter((f) => /^sprint-\d+\.yml$/.test(f)).sort()) {
       boards.push({ file: path.join(archiveDir, f), label: `sprints/${f}`, archive: true });
@@ -111,6 +125,26 @@ function validate(cadenceDir) {
     const inProgress = sprint.items.filter((i) => i.status === 'in_progress');
     if (inProgress.length > 1) {
       problems.push(`${board.label}: ${inProgress.length} items are in_progress (${inProgress.map((i) => i.id).join(', ')}); only one is allowed`);
+    }
+    // Parked items (live boards only -- archives are immutable history) must
+    // carry parked_at on the board and a resume note in their item note. The
+    // note check is deliberately shallow: file exists, "## Resume" heading
+    // present -- this validator never parses note structure beyond that.
+    for (const item of sprint.items.filter((i) => i.status === 'parked')) {
+      if (!item.parked_at) {
+        problems.push(`${board.label}: parked item ${item.id} has no parked_at timestamp`);
+      }
+      const n = (item.id.match(/^C-(\d+)$/) || [])[1];
+      const noteRel = item.type === 'task' ? `tasks/TK-${n}.md` : `user-stories/US-${n}.md`;
+      let hasResume = false;
+      try {
+        hasResume = /^##\s+Resume\b/m.test(fs.readFileSync(path.join(turnstileDir, noteRel), 'utf8'));
+      } catch {
+        // missing note: hasResume stays false
+      }
+      if (!hasResume) {
+        problems.push(`${board.label}: parked item ${item.id} has no resume note (a "## Resume" section in ${noteRel})`);
+      }
     }
     for (const item of sprint.items) {
       if (liveIds.has(item.id)) {
@@ -180,16 +214,16 @@ process.stdin.on('end', () => {
   }
   // Claude Code passes file_path; kimi-code's Write/Edit tools pass path.
   const filePath = (input.tool_input && (input.tool_input.file_path || input.tool_input.path)) || '';
-  let cadenceDir = null;
+  let turnstileDir = null;
   if (/[\\/]turnstile[\\/](backlog\.yml|sprint\.yml|sprint-\d+\.yml)$/.test(filePath)) {
-    cadenceDir = path.dirname(filePath);
+    turnstileDir = path.dirname(filePath);
   } else if (/[\\/]turnstile[\\/]sprints[\\/]sprint-\d+\.yml$/.test(filePath)) {
-    cadenceDir = path.dirname(path.dirname(filePath));
+    turnstileDir = path.dirname(path.dirname(filePath));
   }
-  if (!cadenceDir) process.exit(0);
+  if (!turnstileDir) process.exit(0);
   let problems;
   try {
-    problems = validate(cadenceDir);
+    problems = validate(turnstileDir);
   } catch {
     process.exit(0); // validator error must never break the session
   }

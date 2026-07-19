@@ -7,11 +7,12 @@ user-invocable: false
 # Sprint Plan
 
 <important>
+- Run `node ${CLAUDE_PLUGIN_ROOT}/scripts/config.js` first (surface any warnings once). cadence: flow -- there is no sprint ceremony: explain that ready items form a queue and /turnstile:next pulls the top one, then stop. One exception: if an active non-flow sprint still exists (the cadence was switched while a sprint ran), offer to archive it now (set sprint.status: completed, move it to turnstile/sprints/sprint-<N>.yml, roll its unfinished items back to turnstile/backlog.yml as ready) -- with the user's confirmation only -- so the flow switch can take effect. Never create a new sprint in flow mode.
 - The current sprint always lives at turnstile/sprint.yml -- one stable filename. Completed sprints are archived to turnstile/sprints/sprint-<N>.yml and never edited again.
 - Do not create the new sprint file until the user has explicitly confirmed a sprint goal. Propose one derived from the selected items so confirming is one word, but no goal, no sprint.
 - An item has exactly one live copy at a time: either turnstile/backlog.yml or turnstile/sprint.yml. When an item moves, remove it from its old location. Archived sprint files retain carried-over items as an immutable historical record, not a live copy.
 - Only leaf items with status: ready in turnstile/backlog.yml may be pulled into a sprint. Epics and containers (items another item names as parent) never enter a sprint -- their children do.
-- Sprint items carry tracking fields only (id, title, type, parent, status, points, assignee, carryovers, notes). Acceptance criteria live in the spec (SP-<n>) or the item note -- never copied into YAML.
+- Sprint items carry tracking fields only (id, title, type, parent, status, points, assignee, carryovers, parked_at, notes). Acceptance criteria live in the spec (SP-<n>), the plan (PL-<n>), or the item note -- never copied into YAML.
 - Before writing the new sprint file, Read references/sprint-template.md from this skill's base directory and use that exact format.
 </important>
 

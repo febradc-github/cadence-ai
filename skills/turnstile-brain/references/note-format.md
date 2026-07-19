@@ -6,7 +6,7 @@ turnstile-brain; not needed for searching or reading.
 ## Shared note format
 
     ---
-    type: epic            # epic | story | task | design | spec |
+    type: epic            # epic | story | task | design | spec | plan |
                           # architecture | decision | domain | process | moc | file
     tags: [api/auth]      # hierarchical where a parent exists, max two levels
     aliases: []           # item notes: ["C-<n>", "<title>"] -- for search and
@@ -36,9 +36,11 @@ turnstile-brain; not needed for searching or reading.
   with one exception: quick-lane items (created by /turnstile:quick, which skips
   design and spec) carry an inline "## Acceptance criteria" section in the
   item note, and /turnstile:review reads it from there.
-- **Designs** (`type: design`, `DS-<n>`) and **specs** (`type: spec`,
-  `SP-<n>`): keep their existing body sections, plus frontmatter and a link
-  back to their item note (and the parent's design for breakdown children).
+- **Designs** (`type: design`, `DS-<n>`), **specs** (`type: spec`,
+  `SP-<n>`), and **plans** (`type: plan`, `PL-<n>` -- solo profile's merged
+  design+spec): keep their existing body sections, plus frontmatter and a
+  link back to their item note (and the parent's design for breakdown
+  children). Item notes link a plan as `Plan: [[PL-<n>]]`.
 - **Decisions** (`type: decision`): one ADR per significant choice --
   context, the decision, alternatives rejected and why. Link every item note
   the decision affects and any architecture notes it shapes.
@@ -82,7 +84,7 @@ territory instead.
 
 ## Legacy paths
 
-Earlier cadence versions used flat `designs/<id>.md` / `specs/<id>.md`
+Earlier turnstile versions used flat `designs/<id>.md` / `specs/<id>.md`
 (pre-0.10) and slug names like `C-2-checkout-form.md` /
 `C-2-checkout-form-design.md` (0.10.x). Read them where the current name is
 missing; whenever a skill rewrites one anyway, move it to the current name,
